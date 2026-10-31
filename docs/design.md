@@ -95,7 +95,9 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 
 ## 8. 用户身份
 
-- 过滤器读取 HttpOnly cookie `uid`。cookie 不存在或无效时，创建新的 `app_user` 并写入 cookie（SameSite=Lax，有效期 1 年）。
+- 需要用户的接口在方法参数里声明 `CurrentUser`，由 `CurrentUserArgumentResolver` 读取 HttpOnly cookie `uid`。cookie 不存在、格式不对或用户不存在时，创建新的 `app_user` 并写入 cookie（SameSite=Lax，有效期 1 年）。
+- 不用对所有请求生效的过滤器，是为了让模板、健康检查、静态文件等接口不创建用户：Compose 每 5 秒一次的健康检查和 Server Component 不带 cookie 的请求，都会产生无用的用户记录。
+- `GET /api/me` 首次访问会创建用户，这是签发匿名身份的入口，和"查询接口不推动任务"的约束无关。
 - `GET /api/me` 返回当前用户。`POST /api/users` 新建匿名用户并切换过去。`POST /api/session/switch {userId}` 切换到已有用户。
 - 素材和任务的所有查询都按当前用户过滤。访问别人的资源返回 404。
 - 已知限制：userId 本身就是凭证，知道某个 userId 的人就能切换成该用户。演示方案接受这一点，README 里会说明。

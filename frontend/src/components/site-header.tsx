@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { AccountMenu } from "@/features/session/account-menu";
 
-// 用户入口（当前用户、切换演示用户）在阶段 2 加到右侧
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
@@ -14,6 +14,7 @@ export function SiteHeader() {
           </span>
           小影素材工坊
         </Link>
+        <AccountMenu />
       </div>
     </header>
   );

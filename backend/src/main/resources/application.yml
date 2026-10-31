@@ -21,6 +21,13 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+app:
+  identity:
+    cookie-name: uid
+    cookie-max-age: 365d
+    # 部署到 https 时设为 true
+    cookie-secure: ${COOKIE_SECURE:false}
+
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

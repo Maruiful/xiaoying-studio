@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.xiaoying.user.CurrentUserArgumentResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,10 @@ class HealthControllerTest {
 
     @MockitoBean
     HealthMapper healthMapper;
+
+    // WebConfig 注册参数解析器需要它；切片测试不加载 user 包的组件
+    @MockitoBean
+    CurrentUserArgumentResolver currentUserArgumentResolver;
 
     @Test
     @DisplayName("数据库可用时返回 200 UP")

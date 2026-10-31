@@ -11,7 +11,8 @@ public enum ErrorCode {
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "不支持的内容类型"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "服务器内部错误"),
 
-    TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "模板不存在");
+    TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "模板不存在"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "用户不存在");
 
     private final HttpStatus status;
     private final String defaultMessage;
