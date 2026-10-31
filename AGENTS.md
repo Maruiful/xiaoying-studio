@@ -17,24 +17,24 @@
 ## 目录
 
 ```text
-backend/    Spring Boot 3.3 + MyBatis + Flyway（Maven，Java 17）
-frontend/   Next.js 15 App Router + TypeScript（pnpm，Node 20）
+backend/    Spring Boot 3.5 + MyBatis + Flyway（Maven，Java 17）
+frontend/   Next.js 15 App Router + TypeScript（pnpm，Node 22）
 docs/       设计与规范
 resources/  参考截图
 ```
 
 ## 常用命令
 
-阶段 0 完成后核对这些命令，如有变化同步修改本节。
-
 ```bash
 # 后端（在 backend/ 下）
-mvn spotless:apply          # 格式化
-mvn verify                  # 单元测试 + 集成测试（Testcontainers，需要 Docker）
-mvn spring-boot:run         # 本地启动，需要本地 MySQL
+./mvnw spotless:apply       # 格式化
+./mvnw test                 # 只跑单元测试，不需要 Docker
+./mvnw verify               # 单元测试 + 集成测试（Testcontainers，需要 Docker）+ 格式检查
+./mvnw spring-boot:run      # 本地启动，需要本地 MySQL
 
 # 前端（在 frontend/ 下）
 pnpm install
+pnpm format                 # Prettier 格式化
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 pnpm dev
 

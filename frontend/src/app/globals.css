@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* 深色主题。代码里使用语义化类名（bg-surface、text-muted 等），不写死颜色值。 */
+@theme {
+  --color-background: #0b0b0d;
+  --color-surface: #16161a;
+  --color-surface-raised: #1f1f24;
+  --color-border: #2a2a31;
+  --color-foreground: #ededed;
+  --color-muted: #9a9aa3;
+  --color-accent: #a3d65c;
+  --color-accent-foreground: #0b0b0d;
+  --color-danger: #f26d6d;
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

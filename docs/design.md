@@ -21,14 +21,14 @@
 
 | 部分 | 选择 |
 |---|---|
-| 后端 | Java 17、Spring Boot 3.3.x、MyBatis Spring Boot Starter 3.0.x、Flyway、Lombok |
+| 后端 | Java 17、Spring Boot 3.5.16、MyBatis Spring Boot Starter 3.0.5、Flyway、Lombok |
 | 数据库 | MySQL 8.0 |
 | 后端测试 | JUnit 5、Testcontainers（MySQL）、Awaitility |
-| 前端 | Node 20、pnpm、Next.js 15（App Router）、React 19、TypeScript 5、Tailwind CSS 4、TanStack Query 5、Radix Dialog |
-| 前端测试 | Vitest、Testing Library、MSW |
+| 前端 | Node 22（本地 20 可用）、pnpm 10、Next.js 15.5、React 19.1、TypeScript 5.9、Tailwind CSS 4、TanStack Query 5、Radix Dialog |
+| 前端测试 | Vitest 3.2、Testing Library、MSW 2 |
 | 交付 | Docker Compose、GitHub Actions |
 
-具体小版本在骨架阶段锁定，并写入 README。
+2026-10-31 选定成熟的上一代版本（Boot 3.5 而非 4.x，Next 15 而非 16），优先保证生态兼容性。精确版本见 README。
 
 ## 3. 整体架构
 
