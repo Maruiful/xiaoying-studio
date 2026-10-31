@@ -1,6 +1,8 @@
-// 生成模板示例封面（SVG）。封面为本项目自行生成，不使用第三方图片，无版权问题。
-// 用法：node scripts/generate-demo-covers.mjs
-// 输出：backend/src/main/resources/demo/covers/*.svg，由后端 /api/files/demo/** 提供访问。
+// 生成模板示例封面和模拟结果图（SVG）。全部由本项目自行生成，不使用第三方图片，无版权问题。
+// 用法：node scripts/generate-demo-assets.mjs
+// 输出：
+//   backend/src/main/resources/demo/covers/*.svg   封面，由 /api/files/demo/** 公开访问
+//   backend/src/main/resources/demo/results/*.svg  结果图模板，结果整理步骤复制到存储目录
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -75,8 +77,33 @@ function svg({ name, from, to, motif }) {
 `;
 }
 
+// 模拟生成的结果图：同一套配色和图形，加上"示例成片"的边框和角标，与封面区分。
+// 文件名与模板 id 去掉 demo- 前缀后一致，结果整理步骤按模板选取。
+function resultSvg({ name, from, to, motif }) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="res-${name}" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${from}"/>
+      <stop offset="1" stop-color="${to}"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="#f8f5ef"/>
+  <rect x="36" y="36" width="528" height="640" rx="12" fill="url(#res-${name})"/>
+  <g transform="translate(36 36) scale(0.88)">${MOTIFS[motif]}
+  </g>
+  <rect x="36" y="700" width="200" height="14" rx="7" fill="#c9c2b6"/>
+  <rect x="36" y="728" width="130" height="10" rx="5" fill="#ddd7cc"/>
+  <circle cx="530" cy="730" r="34" fill="none" stroke="${to}" stroke-width="5"/>
+  <path d="M514 731 L526 743 L548 717" fill="none" stroke="${to}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+}
+
+const RESULT_DIR = join(OUT_DIR, "../results");
 mkdirSync(OUT_DIR, { recursive: true });
+mkdirSync(RESULT_DIR, { recursive: true });
 for (const cover of COVERS) {
   writeFileSync(join(OUT_DIR, `${cover.name}.svg`), svg(cover));
+  writeFileSync(join(RESULT_DIR, `${cover.name}.svg`), resultSvg(cover));
 }
-console.log(`生成 ${COVERS.length} 个封面到 ${OUT_DIR}`);
+console.log(`生成 ${COVERS.length} 个封面和结果图到 ${dirname(OUT_DIR)}`);

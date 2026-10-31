@@ -1,5 +1,6 @@
 package com.xiaoying.asset;
 
+import java.util.List;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
@@ -22,4 +23,7 @@ public interface AssetMapper {
             FROM asset WHERE id = #{id} AND user_id = #{userId}
             """)
     AssetEntity findOwned(@Param("id") long id, @Param("userId") String userId);
+
+    /** XML：IN 列表。不存在或属于其他用户的 id 不会出现在结果中。 */
+    List<AssetEntity> findOwnedByIds(@Param("userId") String userId, @Param("ids") List<Long> ids);
 }

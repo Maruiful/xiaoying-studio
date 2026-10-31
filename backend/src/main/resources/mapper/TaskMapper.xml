@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoying.task.TaskMapper">
+
+    <resultMap id="taskViewMap" type="com.xiaoying.task.TaskView" autoMapping="true">
+        <id property="id" column="id"/>
+    </resultMap>
+
+    <sql id="viewColumns">
+        t.id, t.template_id, tp.title AS template_title, t.status, t.stage, t.result_url, t.fail_reason,
+        t.created_at, t.started_at, t.finished_at
+    </sql>
+
+    <insert id="insertTaskAssets">
+        INSERT INTO task_asset (task_id, asset_id, slot_index) VALUES
+        <foreach collection="assetIds" item="assetId" index="i" separator=",">
+            (#{taskId}, #{assetId}, #{i})
+        </foreach>
+    </insert>
+
+    <select id="findViewOwned" resultMap="taskViewMap">
+        SELECT <include refid="viewColumns"/>
+        FROM task t JOIN template tp ON tp.id = t.template_id
+        WHERE t.id = #{id} AND t.user_id = #{userId}
+    </select>
+
+    <!-- 按创建时间倒序；id 作为第二排序键，同一毫秒内创建的任务顺序也稳定 -->
+    <select id="findViewsByUser" resultMap="taskViewMap">
+        SELECT <include refid="viewColumns"/>
+        FROM task t JOIN template tp ON tp.id = t.template_id
+        WHERE t.user_id = #{userId}
+        ORDER BY t.created_at DESC, t.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+</mapper>

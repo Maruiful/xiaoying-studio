@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="res-spring-festival" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e03131"/>
+      <stop offset="1" stop-color="#7d0a0a"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="#f8f5ef"/>
+  <rect x="36" y="36" width="528" height="640" rx="12" fill="url(#res-spring-festival)"/>
+  <g transform="translate(36 36) scale(0.88)">
+    <line x1="300" y1="0" x2="300" y2="230" stroke="#ffd43b" stroke-width="6"/>
+    <ellipse cx="300" cy="380" rx="150" ry="170" fill="#ffd43b" opacity="0.9"/>
+    <rect x="250" y="200" width="100" height="36" rx="6" fill="#ffd43b"/>
+    <rect x="250" y="530" width="100" height="36" rx="6" fill="#ffd43b"/>
+    <line x1="300" y1="566" x2="300" y2="680" stroke="#ffd43b" stroke-width="6"/>
+  </g>
+  <rect x="36" y="700" width="200" height="14" rx="7" fill="#c9c2b6"/>
+  <rect x="36" y="728" width="130" height="10" rx="5" fill="#ddd7cc"/>
+  <circle cx="530" cy="730" r="34" fill="none" stroke="#7d0a0a" stroke-width="5"/>
+  <path d="M514 731 L526 743 L548 717" fill="none" stroke="#7d0a0a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

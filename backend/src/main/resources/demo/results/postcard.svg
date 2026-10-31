@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="res-postcard" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff9a62"/>
+      <stop offset="1" stop-color="#7a3fd1"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="#f8f5ef"/>
+  <rect x="36" y="36" width="528" height="640" rx="12" fill="url(#res-postcard)"/>
+  <g transform="translate(36 36) scale(0.88)">
+    <circle cx="300" cy="300" r="120" fill="#fff" opacity="0.85"/>
+    <path d="M0 560 Q150 470 300 540 T600 520 V800 H0Z" fill="#000" opacity="0.25"/>
+    <path d="M0 620 Q200 560 380 620 T600 600 V800 H0Z" fill="#000" opacity="0.35"/>
+  </g>
+  <rect x="36" y="700" width="200" height="14" rx="7" fill="#c9c2b6"/>
+  <rect x="36" y="728" width="130" height="10" rx="5" fill="#ddd7cc"/>
+  <circle cx="530" cy="730" r="34" fill="none" stroke="#7a3fd1" stroke-width="5"/>
+  <path d="M514 731 L526 743 L548 717" fill="none" stroke="#7a3fd1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

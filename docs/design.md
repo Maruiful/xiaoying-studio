@@ -69,23 +69,25 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 
 ## 6. 后台执行
 
-1. `POST /api/tasks` 在一个事务里校验模板、素材数量、素材归属和类型，然后写入 PENDING 状态的 `task`、`task_asset`，并保存当前模拟配置的快照。
-2. 事务提交后（`afterCommit`）把 taskId 提交给有界线程池，接口返回 `202 {taskId}`。
-3. 工作线程运行 `TaskPipeline`，按顺序执行三个 `TaskStep`，每一步：
-   - 插入一条 RUNNING 的 `task_step`，并把 `task` 更新为 `status=RUNNING, stage=当前步骤`；
-   - 按快照中的耗时等待。如果快照指定这一步失败，就抛出 `StepFailedException`；
-   - 把这条 `task_step` 更新为 SUCCEEDED。
-4. 任何一步失败，就把这一步的 `task_step` 和 `task` 都更新为 FAILED，记录 `fail_reason`，后续步骤不再执行。三步都完成后，在 `WHERE status='RUNNING'` 条件下把任务更新为 SUCCEEDED，并写入 `result_url`。
-5. 线程池队列满时，任务直接置为 FAILED，原因是"系统繁忙"。
-6. 服务启动时，把残留的 PENDING 和 RUNNING 任务置为 FAILED，原因是"服务重启中断"。题目不要求重启后自动恢复执行。
+1. `POST /api/tasks` 在一个事务里校验模板、素材数量、是否重复、素材归属和所属模板，然后写入 PENDING 状态的 `task`、`task_asset`，并保存当前模拟配置的快照。
+2. 事务提交后（`TaskDispatcher` 注册的 `afterCommit`）把 taskId 提交给有界线程池（AbortPolicy），接口返回 `202 {taskId}`。
+3. 工作线程运行 `TaskPipeline`，按 `TaskStage` 的声明顺序执行三个 `TaskStep`，每一步：
+   - `TaskStateRecorder.stepStarted`：把 `task` 更新为 `status=RUNNING, stage=当前步骤`，并插入一条 RUNNING 的 `task_step`（同一事务）；
+   - `TaskStep.execute`：做这一步的事，按快照中的耗时等待。如果快照指定这一步失败，就抛出 `StepFailedException`；
+   - `stepSucceeded`：把这条 `task_step` 更新为 SUCCEEDED。最后一步改用 `taskSucceeded`，`task_step` 和 `task` 一起更新为 SUCCEEDED，并写入 `result_url`。
+4. 任何一步失败，`stepFailed` 把这一步的 `task_step` 和 `task` 一起更新为 FAILED，记录 `fail_reason`，后续步骤不再执行。未预期的异常记为"处理时发生内部错误"，不把异常信息暴露给用户。
+5. 每个状态更新都带前置状态条件。`stepStarted` 返回 false（任务已不可执行）时停止；终态更新影响行数不对时回滚并停止。
+6. 线程池队列满时，任务直接置为 FAILED，原因是"系统繁忙，请稍后重试"。
+7. 线程池默认 4 个核心线程、最大 4 个、队列 100：最多同时执行 4 个任务，其余排队。核心线程数和最大线程数取相同值，因为 `ThreadPoolExecutor` 只有在队列满后才会创建超出核心数的线程，两者不同时最大线程数基本用不到。
+8. 服务启动时（`UnfinishedTaskCleaner`，`ApplicationReadyEvent`），把残留的 PENDING 和 RUNNING 任务及 RUNNING 的步骤置为 FAILED，原因是"服务重启，处理被中断"。只适用于单实例部署。题目不要求重启后自动恢复执行。
 
 三步的具体内容：
 
 | 步骤 | 做什么 |
 |---|---|
-| 素材检查 | 确认文件在磁盘上存在，重新校验数量、类型和大小 |
+| 素材检查 | 先检查再模拟耗时：确认数量、归属、文件在磁盘上存在、类型被模板接受 |
 | 模拟生成 | 按配置的耗时等待 |
-| 结果整理 | 选一张预置结果图，复制到 `results/{taskId}`，生成可访问的 URL |
+| 结果整理 | 按模板选一张预置结果图（`demo/results/`），复制到 `results/{taskId}.svg`，结果地址为 `/api/files/results/{taskId}` |
 
 ## 7. 模拟控制
 
@@ -118,6 +120,7 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 | `GET /api/me` | 当前用户 | 200 `UserVO` |
 | `POST /api/users` | 新建匿名用户并切换过去 | 201 `UserVO` |
 | `POST /api/session/switch` | `{userId}` | 200 `UserVO` |
+| `GET /api/files/results/{taskId}` | 成功任务的结果图，只有主人能访问 | 200 SVG |
 | `GET/PUT /api/dev/simulation` | 模拟配置，仅开发环境 | 200 `SimulationVO` |
 
 `TaskVO` 示例：
@@ -130,7 +133,8 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
   "status": "FAILED",
   "stage": "GENERATE",
   "resultUrl": null,
-  "failReason": "模拟生成失败（模拟配置）",
+  "failReason": "模拟生成失败（模拟失败）",
+  "startedAt": "2025-10-31T06:00:00.050Z",
   "createdAt": "2025-10-31T06:00:00.000Z",
   "finishedAt": "2025-10-31T06:00:03.120Z"
 }

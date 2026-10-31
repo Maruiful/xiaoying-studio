@@ -79,6 +79,18 @@ public class AssetService {
         return AssetVO.from(asset);
     }
 
+    /** 查询属于该用户的素材，供任务提交和素材检查步骤使用。不存在或属于他人的 id 会被略过。 */
+    public List<AssetEntity> findOwned(String userId, List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return assetMapper.findOwnedByIds(userId, ids);
+    }
+
+    public boolean fileExists(AssetEntity asset) {
+        return fileStorage.exists(asset.getStoragePath());
+    }
+
     /** 读取当前用户自己的素材文件。素材不存在或属于其他用户时都返回 404。 */
     public AssetFile loadOwned(String userId, long assetId) {
         AssetEntity asset = assetMapper.findOwned(assetId, userId);

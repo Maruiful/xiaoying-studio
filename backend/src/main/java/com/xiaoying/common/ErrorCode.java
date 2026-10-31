@@ -17,7 +17,12 @@ public enum ErrorCode {
     ASSET_EMPTY(HttpStatus.BAD_REQUEST, "图片文件为空"),
     ASSET_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "图片超过大小限制"),
     ASSET_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "不支持的图片格式"),
-    ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "素材不存在");
+    ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "素材不存在"),
+
+    TASK_ASSET_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "素材数量与模板要求不符"),
+    TASK_ASSET_INVALID(HttpStatus.BAD_REQUEST, "素材不可用"),
+    TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "任务不存在"),
+    RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "制作结果不存在");
 
     private final HttpStatus status;
     private final String defaultMessage;

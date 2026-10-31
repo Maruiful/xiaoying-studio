@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="res-id-photo" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#74c0fc"/>
+      <stop offset="1" stop-color="#1c3d6e"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="#f8f5ef"/>
+  <rect x="36" y="36" width="528" height="640" rx="12" fill="url(#res-id-photo)"/>
+  <g transform="translate(36 36) scale(0.88)">
+    <rect x="130" y="160" width="340" height="460" rx="20" fill="#fff" opacity="0.9"/>
+    <circle cx="300" cy="330" r="80" fill="#1c3d6e" opacity="0.55"/>
+    <path d="M170 600 Q300 430 430 600Z" fill="#1c3d6e" opacity="0.55"/>
+  </g>
+  <rect x="36" y="700" width="200" height="14" rx="7" fill="#c9c2b6"/>
+  <rect x="36" y="728" width="130" height="10" rx="5" fill="#ddd7cc"/>
+  <circle cx="530" cy="730" r="34" fill="none" stroke="#1c3d6e" stroke-width="5"/>
+  <path d="M514 731 L526 743 L548 717" fill="none" stroke="#1c3d6e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -30,6 +30,12 @@ services:
       DB_USER: ${DB_USER:-xiaoying}
       DB_PASSWORD: ${DB_PASSWORD:-xiaoying}
       STORAGE_DIR: /data
+      # 演示用：开放 /api/dev/simulation，可调整耗时、指定失败阶段
+      DEV_API_ENABLED: ${DEV_API_ENABLED:-true}
+      SIM_CHECK_ASSETS_MS: ${SIM_CHECK_ASSETS_MS:-1000}
+      SIM_GENERATE_MS: ${SIM_GENERATE_MS:-3000}
+      SIM_ORGANIZE_RESULT_MS: ${SIM_ORGANIZE_RESULT_MS:-1000}
+      SIM_FAIL_STAGE: ${SIM_FAIL_STAGE:-NONE}
     volumes:
       # 上传的素材和生成的结果图，容器重建后保留
       - backend-data:/data

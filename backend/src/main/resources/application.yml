@@ -28,6 +28,22 @@ server:
 app:
   storage:
     dir: ${STORAGE_DIR:./data}
+  executor:
+    # 线程池只在队列满后才会超出核心线程数，所以同时执行的任务数实际由 core-size 决定。
+    # core-size 与 max-size 取相同值，最多同时执行 4 个任务，其余在队列中排队。
+    core-size: ${EXECUTOR_CORE_SIZE:4}
+    max-size: ${EXECUTOR_MAX_SIZE:4}
+    queue-capacity: ${EXECUTOR_QUEUE_CAPACITY:100}
+  # 模拟生成器的启动默认值；运行时可通过 /api/dev/simulation 修改
+  simulation:
+    check-assets-ms: ${SIM_CHECK_ASSETS_MS:1000}
+    generate-ms: ${SIM_GENERATE_MS:3000}
+    organize-result-ms: ${SIM_ORGANIZE_RESULT_MS:1000}
+    # NONE / CHECK_ASSETS / GENERATE / ORGANIZE_RESULT
+    fail-stage: ${SIM_FAIL_STAGE:NONE}
+  dev-api:
+    # 开放 /api/dev/simulation。Compose 中为演示方便默认开启，正式部署应关闭
+    enabled: ${DEV_API_ENABLED:false}
   identity:
     cookie-name: uid
     cookie-max-age: 365d

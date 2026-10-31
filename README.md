@@ -2,7 +2,7 @@
 
 素材制作网站：浏览模板、上传图片、提交制作任务，Java 后端按三步异步执行模拟生成，前端跟踪任务状态并展示历史结果。题目见 [`要求.md`](要求.md)，设计见 [`docs/design.md`](docs/design.md)，开发规范见 [`docs/conventions.md`](docs/conventions.md)。
 
-> 当前进度：阶段 3（素材上传）。下面标注"待补充"的章节会随开发推进补全。
+> 当前进度：阶段 4（任务后端）。下面标注"待补充"的章节会随开发推进补全。
 
 ## 技术版本
 
@@ -93,7 +93,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ## 模拟数据与素材
 
 - 分类和模板由 Flyway 迁移 `backend/src/main/resources/db/migration/V2__seed.sql` 写入：3 个分类、8 个模板，素材要求分 1、2、3 张，格式和大小上限各不相同。
-- 模板封面是本项目用脚本生成的 SVG（`scripts/generate-demo-covers.mjs`，渐变加简单图形），没有使用第三方图片。重新生成：`node scripts/generate-demo-covers.mjs`。
+- 模板封面和模拟结果图都是本项目用脚本生成的 SVG（`scripts/generate-demo-assets.mjs`，渐变加简单图形），没有使用第三方图片。重新生成：`node scripts/generate-demo-assets.mjs`。
 - 封面位于 `backend/src/main/resources/demo/covers/`，由后端 `/api/files/demo/**` 提供访问。
 
 ## 素材上传
@@ -120,6 +120,68 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 **前端**：选择文件后先按模板要求校验类型和大小，不合格直接提示，不发请求。每个上传位支持预览、替换、移除；上传失败时，网络或服务器错误可以重试，文件本身被拒绝则需要换一张。替换或移除时会取消进行中的上传，旧请求晚返回也不会覆盖新状态。所有上传位都成功后，"开始制作"按钮才可点击。
 
 **存储**：文件保存在 `${STORAGE_DIR}/assets/{userId}/{uuid}.{ext}`，Compose 中是数据卷 `backend-data`，容器重建后保留。
+
+## 制作任务与后台执行
+
+### 状态与阶段
+
+| 字段 | 取值 |
+|---|---|
+| `status`（整体状态） | `PENDING` 等待处理 → `RUNNING` 处理中 → `SUCCEEDED` 成功 / `FAILED` 失败 |
+| `stage`（当前阶段） | `CHECK_ASSETS` 素材检查 → `GENERATE` 模拟生成 → `ORGANIZE_RESULT` 结果整理；`PENDING` 时为 `null`；失败时停在失败的那一步 |
+
+`SUCCEEDED` 和 `FAILED` 是终态，不会再变。
+
+### 执行方式
+
+1. `POST /api/tasks` 在一个短事务里校验模板、素材数量、素材归属和所属模板，写入 `PENDING` 任务和当前模拟配置的快照。
+2. 事务提交后（`afterCommit`）把任务 ID 交给有界线程池（默认 4 个线程、队列 100，最多同时执行 4 个任务，其余排队），接口立即返回 `202 {taskId}`。关闭页面不影响任务。
+3. 工作线程按顺序执行三步。每一步的边界：
+   - 开始：`task` 更新为 `RUNNING` + 当前阶段，插入一条 `task_step`（RUNNING）；
+   - 执行：按快照中的耗时等待，指定失败时抛出失败；
+   - 结束：`task_step` 更新为 SUCCEEDED 或 FAILED。
+   每次状态变化是一个独立的短事务，`task` 和 `task_step` 一起更新。
+4. 某一步失败后不再执行后续步骤，`task` 记为 `FAILED`，`stage` 停在该步，`fail_reason` 写入原因。
+5. 结果整理复制一张预置结果图到 `${STORAGE_DIR}/results/{taskId}.svg`，`task` 记为 `SUCCEEDED` 并写入 `result_url`。
+
+**保证终态不被覆盖**：所有状态更新 SQL 都带前置状态条件（如 `WHERE id = ? AND status = 'RUNNING' AND stage = ?`）并检查影响行数，不符合时停止执行。查询接口只读数据库，不会推动任务。
+
+**异常情况**：线程池队列满时任务直接记为失败（"系统繁忙"）；服务启动时把上次进程留下的 `PENDING`/`RUNNING` 任务记为失败（"服务重启，处理被中断"）。
+
+### 接口
+
+| 接口 | 说明 |
+|---|---|
+| `POST /api/tasks` | 请求 `{templateId, assetIds[]}`（按上传位顺序）。返回 202 `{taskId}` |
+| `GET /api/tasks/{id}` | 返回 `TaskVO`，其他用户的任务返回 404 |
+| `GET /api/tasks?page=1&size=20` | 当前用户的历史，按创建时间倒序。返回 `{items, total, page, size}`，`size` 最大 50 |
+| `GET /api/files/results/{taskId}` | 成功任务的结果图（SVG），只有任务主人能访问 |
+
+`TaskVO` 字段：`id`、`templateId`、`templateTitle`、`status`、`stage`、`resultUrl`（仅成功时）、`failReason`（仅失败时）、`createdAt`、`startedAt`、`finishedAt`。
+
+提交校验失败：数量不对 400 `TASK_ASSET_COUNT_MISMATCH`；素材重复、不存在、属于他人或属于其他模板 400 `TASK_ASSET_INVALID`；模板不存在 404 `TEMPLATE_NOT_FOUND`。
+
+### 模拟控制（调整耗时、指定阶段失败）
+
+启动默认值由环境变量设置（见 `.env.example`）：`SIM_CHECK_ASSETS_MS`、`SIM_GENERATE_MS`、`SIM_ORGANIZE_RESULT_MS`、`SIM_FAIL_STAGE`（`NONE` / `CHECK_ASSETS` / `GENERATE` / `ORGANIZE_RESULT`）。
+
+运行时通过开发接口修改，只在 `DEV_API_ENABLED=true` 时开放（Compose 默认开启，正式部署应关闭）：
+
+```bash
+# 查看当前配置
+curl http://localhost:3000/api/dev/simulation
+
+# 让"模拟生成"失败（可重复触发，直到改回 NONE）
+curl -X PUT http://localhost:3000/api/dev/simulation -H 'content-type: application/json' -d '{"failStage":"GENERATE"}'
+
+# 把模拟生成调到 10 秒，便于观察处理中和多任务
+curl -X PUT http://localhost:3000/api/dev/simulation -H 'content-type: application/json' -d '{"generateMs":10000}'
+
+# 恢复为全部成功
+curl -X PUT http://localhost:3000/api/dev/simulation -H 'content-type: application/json' -d '{"failStage":"NONE","generateMs":3000}'
+```
+
+字段都是可选的，未给出的沿用当前值；耗时范围 0～60000 毫秒。配置在任务提交时固定为快照，修改只影响之后提交的任务。配置只保存在内存中，重启后恢复为环境变量的值。
 
 ## 用户身份与个人记录
 
@@ -149,7 +211,6 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 ## 待补充
 
-- 主要接口及字段、任务状态与阶段、后台执行方式
 - 演示：成功、指定阶段失败、调整耗时、多任务、刷新恢复
 - 已完成／未完成项、已知限制、实际投入
 - 部署与回滚

@@ -133,7 +133,7 @@ com.xiaoying
   ```yaml
   app:
     storage: { dir: ./data, public-base-url: /api/files }
-    executor: { core-size: 2, max-size: 4, queue-capacity: 100 }
+    executor: { core-size: 4, max-size: 4, queue-capacity: 100 }
     simulation: { check-assets-ms: 1000, generate-ms: 3000, organize-result-ms: 1000, fail-stage: NONE }
     dev-api: { enabled: false }
   ```
@@ -256,4 +256,4 @@ frontend/src/
 ## 5. 素材
 
 - 模板封面和预置结果图自己制作，放在 `backend/src/main/resources/demo/`，通过 `/api/files/demo/**` 访问，README 写明来源。不使用来源不明的网络图片。
-- 封面由 `scripts/generate-demo-covers.mjs` 生成。修改封面时改脚本再重新生成，不手改 SVG。
+- 封面由 `scripts/generate-demo-assets.mjs` 生成。修改封面时改脚本再重新生成，不手改 SVG。

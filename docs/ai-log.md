@@ -18,3 +18,9 @@ AI 生成的代码被测试或审查发现问题并修正时记录在这里，�
 ## 2026-10-31 阶段 3 素材上传
 
 - **测试 JVM 因内存不足无法启动**：`./mvnw verify` 报 "forked VM terminated"，读 surefire 的 dumpstream 发现是 `Native memory allocation (mmap) failed`，本机 7.7GB 只剩 0.5GB 空闲（Docker 的 WSL 虚拟机占用较多）。不是代码问题：停掉 compose 容器释放内存，并用 `-DargLine="-Xmx512m -XX:+UseSerialGC"` 限制测试 JVM 后通过。
+
+## 2026-11-01 阶段 4 任务后端
+
+- 结果整理需要预置结果图，把封面脚本改名为 `scripts/generate-demo-assets.mjs`，同时生成 `demo/results/*.svg`。封面文件内容没有变化。
+- 测试中途 `TaskPipelineTest` 的日志里出现一段 IllegalStateException 堆栈，来自"未预期异常记为内部错误"这个用例故意抛出的异常，被流水线按设计记录为 error 日志，不是测试失败。
+- 本机内存仍然紧张，后端测试继续用 `MAVEN_OPTS=-Xmx384m`、`-DargLine="-Xmx512m -XX:+UseSerialGC"` 运行。
