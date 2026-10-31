@@ -14,3 +14,7 @@ AI 生成的代码被测试或审查发现问题并修正时记录在这里，�
 
 - **容器没有用上新镜像**：AI 在后台执行 `docker compose up --build -d` 后，curl 检查发现接口仍是 404，对比镜像 ID 发现容器还在跑阶段 0 的旧镜像。改为由开发者执行 `docker compose up --build --force-recreate`，之后构建和启动都交给开发者在自己终端执行。
 - **不存在的模板返回 200**：端到端检查发现 `/templates/nope` 内容正确但状态码 200，原因是 `loading.tsx` 的流式渲染先发出了响应头。评估后保留骨架屏，写入 README 已知限制。
+
+## 2026-10-31 阶段 3 素材上传
+
+- **测试 JVM 因内存不足无法启动**：`./mvnw verify` 报 "forked VM terminated"，读 surefire 的 dumpstream 发现是 `Native memory allocation (mmap) failed`，本机 7.7GB 只剩 0.5GB 空闲（Docker 的 WSL 虚拟机占用较多）。不是代码问题：停掉 compose 容器释放内存，并用 `-DargLine="-Xmx512m -XX:+UseSerialGC"` 限制测试 JVM 后通过。

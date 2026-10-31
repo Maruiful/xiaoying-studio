@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTemplate } from "@/features/templates/api";
 import { TemplateCover } from "@/features/templates/template-cover";
 import { TemplateRequirements } from "@/features/templates/template-requirements";
+import { UploadPanel } from "@/features/upload/upload-panel";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -47,7 +48,8 @@ export default async function TemplatePage({ params }: Props) {
 
         <TemplateRequirements template={template} />
 
-        {/* 阶段 3：按 requiredImageCount 显示上传位和提交按钮 */}
+        {/* key：切换到另一个模板时重置上传位 */}
+        <UploadPanel key={template.id} template={template} />
       </section>
 
       <section

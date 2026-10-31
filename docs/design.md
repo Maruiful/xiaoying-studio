@@ -111,6 +111,7 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 | `GET /api/templates?category=` | 模板列表 | 200 `TemplateCardVO[]` |
 | `GET /api/templates/{id}` | 模板详情 | 200 `TemplateDetailVO` |
 | `POST /api/assets` | multipart：file、templateId | 201 `AssetVO` |
+| `GET /api/files/assets/{assetId}` | 读取素材文件，只有主人能访问，其他人 404 | 200 图片 |
 | `POST /api/tasks` | `{templateId, assetIds[]}` | 202 `{taskId}` |
 | `GET /api/tasks/{id}` | 单个任务 | 200 `TaskVO` |
 | `GET /api/tasks?page=&size=` | 当前用户的历史 | 200 `PageVO<TaskVO>` |

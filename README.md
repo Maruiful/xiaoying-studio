@@ -2,7 +2,7 @@
 
 素材制作网站：浏览模板、上传图片、提交制作任务，Java 后端按三步异步执行模拟生成，前端跟踪任务状态并展示历史结果。题目见 [`要求.md`](要求.md)，设计见 [`docs/design.md`](docs/design.md)，开发规范见 [`docs/conventions.md`](docs/conventions.md)。
 
-> 当前进度：阶段 2（用户身份）。下面标注"待补充"的章节会随开发推进补全。
+> 当前进度：阶段 3（素材上传）。下面标注"待补充"的章节会随开发推进补全。
 
 ## 技术版本
 
@@ -81,6 +81,8 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 |---|---|---|
 | `DB_HOST` / `DB_PORT` / `DB_NAME` | 数据库地址 | `localhost` / `3306` / `xiaoying` |
 | `DB_USER` / `DB_PASSWORD` | 数据库账号（示例值，非真实凭据） | `xiaoying` / `xiaoying` |
+| `STORAGE_DIR` | 上传素材和结果图的存储目录（Compose 中为数据卷 `/data`） | `./data` |
+| `COOKIE_SECURE` | 身份 cookie 是否加 `Secure`，部署到 https 时设为 `true` | `false` |
 | `BACKEND_URL` | 前端转发的后端地址 | `http://localhost:8080` |
 | `NPM_REGISTRY` | 前端镜像构建使用的 npm 源 | `https://registry.npmjs.org` |
 
@@ -93,6 +95,31 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - 分类和模板由 Flyway 迁移 `backend/src/main/resources/db/migration/V2__seed.sql` 写入：3 个分类、8 个模板，素材要求分 1、2、3 张，格式和大小上限各不相同。
 - 模板封面是本项目用脚本生成的 SVG（`scripts/generate-demo-covers.mjs`，渐变加简单图形），没有使用第三方图片。重新生成：`node scripts/generate-demo-covers.mjs`。
 - 封面位于 `backend/src/main/resources/demo/covers/`，由后端 `/api/files/demo/**` 提供访问。
+
+## 素材上传
+
+详情页按模板要求的数量显示上传位，每张图片单独上传。
+
+| 接口 | 说明 |
+|---|---|
+| `POST /api/assets` | multipart 字段 `file`、`templateId`。成功返回 201 `{id, templateId, originalName, mimeType, sizeBytes, url, createdAt}` |
+| `GET /api/files/assets/{id}` | 读取素材文件。只有上传者能访问，其他用户返回 404 |
+
+**服务端校验**（顺序如下，以服务端为准）：
+
+| 情况 | 响应 |
+|---|---|
+| 模板不存在 | 404 `TEMPLATE_NOT_FOUND` |
+| 缺少 `file` 字段 | 400 `VALIDATION_FAILED` |
+| 文件为空 | 400 `ASSET_EMPTY` |
+| 超过模板的大小上限 | 413 `ASSET_TOO_LARGE`，`details.maxBytes` 为上限 |
+| 真实类型不在模板允许范围内 | 415 `ASSET_TYPE_NOT_ALLOWED`，`details.acceptedMimeTypes` |
+
+真实类型按文件头字节判断（JPG `FF D8 FF`、PNG `89 50 4E 47…`、WebP `RIFF….WEBP`），不信任扩展名和客户端声明的 Content-Type。被拒绝的上传不写数据库，也不留文件。
+
+**前端**：选择文件后先按模板要求校验类型和大小，不合格直接提示，不发请求。每个上传位支持预览、替换、移除；上传失败时，网络或服务器错误可以重试，文件本身被拒绝则需要换一张。替换或移除时会取消进行中的上传，旧请求晚返回也不会覆盖新状态。所有上传位都成功后，"开始制作"按钮才可点击。
+
+**存储**：文件保存在 `${STORAGE_DIR}/assets/{userId}/{uuid}.{ext}`，Compose 中是数据卷 `backend-data`，容器重建后保留。
 
 ## 用户身份与个人记录
 

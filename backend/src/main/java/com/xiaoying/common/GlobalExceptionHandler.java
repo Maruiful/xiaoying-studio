@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
@@ -43,6 +44,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         e.getBindingResult().getFieldErrors().forEach(fe -> fields.putIfAbsent(fe.getField(), fe.getDefaultMessage()));
         ErrorCode code = ErrorCode.VALIDATION_FAILED;
         return ResponseEntity.status(code.status()).body(ErrorVO.of(code, code.defaultMessage(), fields));
+    }
+
+    /** 请求体超过 spring.servlet.multipart 的全局上限。按模板的上限校验在 AssetService 中。 */
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ErrorCode code = ErrorCode.ASSET_TOO_LARGE;
+        return ResponseEntity.status(code.status()).body(ErrorVO.of(code, "图片超过服务器允许的大小", null));
     }
 
     @Override

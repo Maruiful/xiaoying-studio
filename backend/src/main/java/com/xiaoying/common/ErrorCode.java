@@ -12,7 +12,12 @@ public enum ErrorCode {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "服务器内部错误"),
 
     TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "模板不存在"),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "用户不存在");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "用户不存在"),
+
+    ASSET_EMPTY(HttpStatus.BAD_REQUEST, "图片文件为空"),
+    ASSET_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "图片超过大小限制"),
+    ASSET_TYPE_NOT_ALLOWED(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "不支持的图片格式"),
+    ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "素材不存在");
 
     private final HttpStatus status;
     private final String defaultMessage;

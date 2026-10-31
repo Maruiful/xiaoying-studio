@@ -29,7 +29,9 @@ services:
       DB_NAME: ${DB_NAME:-xiaoying}
       DB_USER: ${DB_USER:-xiaoying}
       DB_PASSWORD: ${DB_PASSWORD:-xiaoying}
+      STORAGE_DIR: /data
     volumes:
+      # 上传的素材和生成的结果图，容器重建后保留
       - backend-data:/data
     ports:
       - "${BACKEND_HOST_PORT:-8080}:8080"
