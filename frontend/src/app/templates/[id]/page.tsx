@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTemplate } from "@/features/templates/api";
 import { TemplateCover } from "@/features/templates/template-cover";
 import { TemplateRequirements } from "@/features/templates/template-requirements";
+import { TaskHistory } from "@/features/tasks/task-history";
 import { UploadPanel } from "@/features/upload/upload-panel";
 
 type Props = { params: Promise<{ id: string }> };
@@ -56,10 +57,7 @@ export default async function TemplatePage({ params }: Props) {
         aria-labelledby="history-heading"
         className="rounded-2xl bg-surface p-5"
       >
-        <h2 id="history-heading" className="font-semibold">
-          制作记录
-        </h2>
-        {/* 阶段 5：当前用户的全部历史任务 */}
+        <TaskHistory headingId="history-heading" />
       </section>
     </main>
   );

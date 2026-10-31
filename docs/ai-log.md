@@ -24,3 +24,9 @@ AI 生成的代码被测试或审查发现问题并修正时记录在这里，�
 - 结果整理需要预置结果图，把封面脚本改名为 `scripts/generate-demo-assets.mjs`，同时生成 `demo/results/*.svg`。封面文件内容没有变化。
 - 测试中途 `TaskPipelineTest` 的日志里出现一段 IllegalStateException 堆栈，来自"未预期异常记为内部错误"这个用例故意抛出的异常，被流水线按设计记录为 error 日志，不是测试失败。
 - 本机内存仍然紧张，后端测试继续用 `MAVEN_OPTS=-Xmx384m`、`-DargLine="-Xmx512m -XX:+UseSerialGC"` 运行。
+
+## 2026-11-01 阶段 5 任务前端
+
+- **测试里 `React is not defined`**：tsconfig 的 `jsx: preserve` 是给 Next 用的，Vitest 用 esbuild 转换 `.tsx` 时按经典运行时处理。修正：`vitest.config.mts` 设 `esbuild.jsx: "automatic"`。
+- **切换用户测试的写法有误**：AI 第一版测试在切换后才卸载用户 A 的组件，卸载前组件又用 `initialData` 重建了 A 的缓存，断言失败。实际页面在切换后按新 userId 渲染，不会这样。改为在一个 hook 里按 `useMe()` 决定跟踪哪个用户的任务，与页面行为一致。
+- 连续失败次数没有用 TanStack Query 的 `fetchFailureCount`，因为每次重新请求它都会清零（读 query-core 源码确认），改为在 hook 里自己记录。

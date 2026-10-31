@@ -22,8 +22,12 @@ export function useMe() {
 
 function useApplyUser() {
   const queryClient = useQueryClient();
-  return (user: User) => {
-    // 阶段 5：在这里取消并清空上一个用户的任务查询，避免旧请求写入新用户的视图
+  return async (user: User) => {
+    // 先取消进行中的请求（包括轮询），再清空缓存，最后写入新用户。
+    // 和用户有关的 key 都以 userId 开头，旧请求即使晚返回也只会写进旧用户的 key，
+    // 而旧 key 已经没有观察者，不会显示出来。
+    await queryClient.cancelQueries();
+    queryClient.clear();
     queryClient.setQueryData(qk.me, user);
     rememberUser(user.id);
   };

@@ -7,12 +7,21 @@ type Props = {
   index: number;
   slot: Slot;
   accept: string;
+  /** 提交任务期间禁止修改 */
+  disabled?: boolean;
   onSelect: (file: File) => void;
   onRemove: () => void;
 };
 
 /** 单个上传位。用 label 包住隐藏的 file input，键盘可以聚焦并用回车或空格选择文件。 */
-export function UploadSlot({ index, slot, accept, onSelect, onRemove }: Props) {
+export function UploadSlot({
+  index,
+  slot,
+  accept,
+  disabled = false,
+  onSelect,
+  onRemove,
+}: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const label = `第 ${index + 1} 张图片`;
@@ -30,6 +39,7 @@ export function UploadSlot({ index, slot, accept, onSelect, onRemove }: Props) {
       id={inputId}
       type="file"
       accept={accept}
+      disabled={disabled}
       onChange={handleChange}
       className="sr-only"
     />
@@ -39,7 +49,8 @@ export function UploadSlot({ index, slot, accept, onSelect, onRemove }: Props) {
     return (
       <label
         htmlFor={inputId}
-        className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-raised text-sm text-muted transition-colors hover:border-accent hover:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent"
+        aria-disabled={disabled}
+        className="flex aspect-square cursor-pointer aria-disabled:cursor-not-allowed aria-disabled:opacity-50 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-raised text-sm text-muted transition-colors hover:border-accent hover:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent"
       >
         {input}
         <span
@@ -95,7 +106,8 @@ export function UploadSlot({ index, slot, accept, onSelect, onRemove }: Props) {
           <button
             type="button"
             onClick={() => onSelect(slot.file)}
-            className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80"
+            disabled={disabled}
+            className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80 disabled:opacity-50"
           >
             重试
           </button>
@@ -103,16 +115,18 @@ export function UploadSlot({ index, slot, accept, onSelect, onRemove }: Props) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
+          disabled={disabled}
           aria-label={`替换${label}`}
-          className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80"
+          className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80 disabled:opacity-50"
         >
           替换
         </button>
         <button
           type="button"
           onClick={onRemove}
+          disabled={disabled}
           aria-label={`移除${label}`}
-          className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80"
+          className="rounded-lg bg-black/60 px-2 py-1 text-xs hover:bg-black/80 disabled:opacity-50"
         >
           移除
         </button>
