@@ -224,6 +224,7 @@ frontend/src/
 
 - 用 Tailwind。主题色写成 CSS 变量（深色主题），代码里用语义化的类名，比如 `bg-surface`、`text-muted`，不写死颜色值。
 - 不写行内 style，只有动态尺寸可以例外。
+- 图片都由 Java 后端提供（SVG 封面、上传图、结果图），直接用 `<img>`，不用 `next/image`。纯装饰的图片 `alt=""`。
 - 以桌面端为主。`md` 断点以下，详情页的两栏改为上下排列。
 
 - 有参考截图的页面（`resources/`）沿用其主要布局和信息层级，不要求逐像素一致，图片和文案可以替换。截图中的题外功能（积分、计费、删除账号、语言切换、删除记录）不实现。没有截图的页面自行设计，风格保持一致。
@@ -246,7 +247,7 @@ frontend/src/
 
 ## 4. Git
 
-- `main` 必须始终能构建通过。每个阶段在 `feat/xxx` 分支上开发，CI 通过后合并。
+- 单人开发，直接在 `main` 上提交，不建功能分支。`main` 必须始终能构建通过，提交前先跑本地检查，推送后确认 CI 结果。
 - 提交信息遵循 Conventional Commits，例如 `feat(task): 实现三步流水线`、`fix(upload): 移除时取消上传请求`、`test`、`docs`、`chore`、`ci`。
 - 一个提交只做一件事。前后端需要一起改的同一个功能，可以放在同一个提交里。
 - 不提交 `node_modules`、`target`、`.next`、`data/` 和 `.env`。
@@ -254,4 +255,5 @@ frontend/src/
 
 ## 5. 素材
 
-- 模板封面和预置结果图自己制作，放在 `backend/src/main/resources/static/demo/`，README 写明来源。不使用来源不明的网络图片。
+- 模板封面和预置结果图自己制作，放在 `backend/src/main/resources/demo/`，通过 `/api/files/demo/**` 访问，README 写明来源。不使用来源不明的网络图片。
+- 封面由 `scripts/generate-demo-covers.mjs` 生成。修改封面时改脚本再重新生成，不手改 SVG。

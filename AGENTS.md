@@ -69,7 +69,7 @@ docker compose up --build
 
 - 只在用户要求时提交，不自行 push。
 - 提交信息遵循 Conventional Commits，例如 `feat(task): 实现三步流水线`。
-- 在 `feat/xxx` 分支上开发，不直接在 `main` 上提交功能代码。
+- 单人开发，直接在 `main` 上提交，不建功能分支。提交前本地检查必须通过，保证 `main` 始终能构建。
 - 不提交 `node_modules`、`target`、`.next`、`data/`、`.env`。
 
 ## AI 工作流记录

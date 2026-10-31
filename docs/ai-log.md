@@ -9,3 +9,8 @@ AI 生成的代码被测试或审查发现问题并修正时记录在这里，�
 - **Spotless 检查失败**：AI 在 Windows 上生成的 Java 文件是 CRLF，`.gitattributes` 规定 LF，`mvnw verify` 的格式检查失败。修正：执行 `spotless:apply`；之后由格式化工具统一换行。
 - **Maven Wrapper 写入了本机镜像地址**：生成的 `maven-wrapper.properties` 指向本机 settings 里的阿里云镜像，CI 和其他环境未必可用。人工检查时发现，改回 Maven 中央仓库。
 - **集成测试卡住**：Testcontainers 需要的 `mysql:8.0` 从本机配置的镜像源下载近 20 分钟未完成。不是代码问题，由开发者用可用的镜像源手动拉取并 tag 回原名。
+
+## 2026-10-31 阶段 1 模板列表与详情
+
+- **容器没有用上新镜像**：AI 在后台执行 `docker compose up --build -d` 后，curl 检查发现接口仍是 404，对比镜像 ID 发现容器还在跑阶段 0 的旧镜像。改为由开发者执行 `docker compose up --build --force-recreate`，之后构建和启动都交给开发者在自己终端执行。
+- **不存在的模板返回 200**：端到端检查发现 `/templates/nope` 内容正确但状态码 200，原因是 `loading.tsx` 的流式渲染先发出了响应头。评估后保留骨架屏，写入 README 已知限制。

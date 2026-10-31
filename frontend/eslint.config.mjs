@@ -15,6 +15,8 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
+      // 图片都由 Java 后端提供（SVG 封面、用户上传图、结果图），直接用 <img>，不经过 next/image 优化
+      "@next/next/no-img-element": "off",
     },
   },
   // 格式交给 Prettier，关闭与之冲突的 ESLint 规则

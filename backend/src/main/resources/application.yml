@@ -9,6 +9,10 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: UTC
+  web:
+    resources:
+      # 关闭默认的 /** 静态资源映射，素材只通过 WebConfig 中的 /api/files/** 访问，未知路径返回 JSON 404
+      add-mappings: false
   servlet:
     multipart:
       max-file-size: 10MB

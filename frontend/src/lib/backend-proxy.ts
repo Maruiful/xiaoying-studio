@@ -1,5 +1,6 @@
 // 把同源的 /api/* 请求原样转发给 Java 后端。业务逻辑全部在 Java，这里只做转发。
 // 后端地址在运行时读取 BACKEND_URL，同一个镜像可以部署到不同环境。
+import { backendUrl } from "./backend-url";
 
 // 这些头只对单跳连接有意义，或者会由 fetch 重新计算，不能原样转发
 const HOP_BY_HOP_HEADERS = [
@@ -16,13 +17,6 @@ const HOP_BY_HOP_HEADERS = [
 
 // Node 的 fetch 会自动解压响应体，所以不能保留原来的压缩相关头
 const STRIPPED_RESPONSE_HEADERS = [...HOP_BY_HOP_HEADERS, "content-encoding"];
-
-export function backendUrl(): string {
-  return (process.env.BACKEND_URL ?? "http://localhost:8080").replace(
-    /\/+$/,
-    "",
-  );
-}
 
 export async function proxyToBackend(
   request: Request,

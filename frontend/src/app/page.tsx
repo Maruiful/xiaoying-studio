@@ -1,12 +1,30 @@
-import { BackendStatus } from "@/components/backend-status";
+import { Suspense } from "react";
+import { getCategories } from "@/features/templates/api";
+import { CategoryTabs } from "@/features/templates/category-tabs";
+import {
+  TemplateGrid,
+  TemplateGridSkeleton,
+} from "@/features/templates/template-grid";
 
-// 阶段 0 占位页：验证 浏览器 → Next.js 转发 → Java → MySQL 整条链路。阶段 1 替换为模板列表。
-export default function HomePage() {
+type Props = {
+  searchParams: Promise<{ category?: string | string[] }>;
+};
+
+export default async function HomePage({ searchParams }: Props) {
+  const { category: raw } = await searchParams;
+  const category = typeof raw === "string" && raw ? raw : undefined;
+  const categories = await getCategories();
+
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-4 px-6 py-16">
-      <h1 className="text-2xl font-semibold">小影素材工坊</h1>
-      <p className="text-muted">项目骨架已启动，模板列表将在阶段 1 实现。</p>
-      <BackendStatus />
+    <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
+      <h1 className="sr-only">模板列表</h1>
+      <div className="mb-6">
+        <CategoryTabs categories={categories} active={category} />
+      </div>
+      {/* key 随分类变化，切换分类时重新显示骨架屏 */}
+      <Suspense key={category ?? "all"} fallback={<TemplateGridSkeleton />}>
+        <TemplateGrid category={category} />
+      </Suspense>
     </main>
   );
 }

@@ -20,6 +20,12 @@ html {
   color-scheme: dark;
 }
 
+/* 键盘焦点统一可见，不全局去掉 outline */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);

@@ -2,7 +2,7 @@
 
 素材制作网站：浏览模板、上传图片、提交制作任务，Java 后端按三步异步执行模拟生成，前端跟踪任务状态并展示历史结果。题目见 [`要求.md`](要求.md)，设计见 [`docs/design.md`](docs/design.md)，开发规范见 [`docs/conventions.md`](docs/conventions.md)。
 
-> 当前进度：阶段 0（项目骨架）。下面标注"待补充"的章节会随开发推进补全。
+> 当前进度：阶段 1（模板列表与详情）。下面标注"待补充"的章节会随开发推进补全。
 
 ## 技术版本
 
@@ -88,6 +88,16 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 `.github/workflows/ci.yml` 在 push 和 pull request 时运行：前端 lint、格式检查、类型检查、测试、构建；后端 `./mvnw verify`（单元测试、Testcontainers 集成测试、Spotless 检查、打包）。
 
+## 模拟数据与素材
+
+- 分类和模板由 Flyway 迁移 `backend/src/main/resources/db/migration/V2__seed.sql` 写入：3 个分类、8 个模板，素材要求分 1、2、3 张，格式和大小上限各不相同。
+- 模板封面是本项目用脚本生成的 SVG（`scripts/generate-demo-covers.mjs`，渐变加简单图形），没有使用第三方图片。重新生成：`node scripts/generate-demo-covers.mjs`。
+- 封面位于 `backend/src/main/resources/demo/covers/`，由后端 `/api/files/demo/**` 提供访问。
+
+## 已知限制
+
+- 访问不存在的模板（如 `/templates/nope`）时页面显示"模板不存在"，但 HTTP 状态码是 200。原因是详情页的 `loading.tsx` 骨架屏会先以 200 流式发出，之后才判断出模板不存在；Next.js 会为该页面加上 `noindex`。接口 `/api/templates/nope` 本身返回 404。
+
 ## 待补充
 
 - 主要接口及字段、任务状态与阶段、后台执行方式
@@ -96,4 +106,3 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - 已完成／未完成项、已知限制、实际投入
 - 部署与回滚
 - AI 使用说明与工作流
-- 素材来源
