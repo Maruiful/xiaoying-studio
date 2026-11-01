@@ -181,6 +181,35 @@ describe("useTask 轮询生命周期", () => {
 });
 
 describe("提交与切换用户", () => {
+  it("刷新历史时读取所有分页，并恢复第 51 条任务", async () => {
+    const pages: number[] = [];
+    server.use(
+      http.get("*/api/tasks", ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get("page"));
+        pages.push(page);
+        return HttpResponse.json({
+          items:
+            page === 1
+              ? Array.from({ length: 50 }, (_, i) => succeeded(i + 1))
+              : [task(51, { status: "PENDING", stage: null })],
+          total: 51,
+          page,
+          size: 50,
+        });
+      }),
+    );
+    const { client, wrapper } = setup();
+
+    const { result } = renderHook(() => useTaskHistory(USER_A), { wrapper });
+
+    await waitFor(() => expect(result.current.data).toHaveLength(51));
+    expect(pages).toEqual([1, 2]);
+    expect(result.current.data?.[50]?.id).toBe(51);
+    expect(client.getQueryData<Task>(qk.task(USER_A, 51))?.status).toBe(
+      "PENDING",
+    );
+  });
+
   it("受理成功后任务立即出现在历史中，状态为等待处理", async () => {
     server.use(
       http.get("*/api/tasks", () =>

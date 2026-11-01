@@ -23,15 +23,23 @@ function seedTask(queryClient: QueryClient, userId: string, task: Task) {
   );
 }
 
-/** 当前用户的历史任务（最近一页）。列表本身不轮询，未结束的任务由各自的 useTask 跟踪。 */
+/** 当前用户的全部历史任务。列表本身不轮询，未结束的任务由各自的 useTask 跟踪。 */
 export function useTaskHistory(userId: string) {
   const queryClient = useQueryClient();
   return useQuery({
     queryKey: qk.tasks(userId),
     queryFn: async ({ signal }) => {
-      const page = await listTasks(signal);
-      for (const task of page.items) seedTask(queryClient, userId, task);
-      return page.items;
+      const tasks = new Map<number, Task>();
+      let pageNumber = 1;
+      while (true) {
+        const page = await listTasks(pageNumber, signal);
+        for (const task of page.items) tasks.set(task.id, task);
+        if (tasks.size >= page.total || page.items.length === 0) break;
+        pageNumber += 1;
+      }
+      const items = Array.from(tasks.values());
+      for (const task of items) seedTask(queryClient, userId, task);
+      return items;
     },
   });
 }
