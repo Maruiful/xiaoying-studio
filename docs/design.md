@@ -155,7 +155,7 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 - 提交用 `useMutation`。受理成功后，把任务插入历史缓存，清空上传位，按钮恢复可用。
 - 每张未结束的任务卡片有自己的 query，`refetchInterval` 在任务进入终态后返回 `false`。
 - 查询出错时，卡片保留上次的数据，并显示"状态查询失败 · 重试"。这和任务 FAILED 是两种不同的展示。连续失败 3 次后暂停自动轮询，点重试或 History 的刷新按钮可以恢复。
-- 切换用户时，先 `cancelQueries()` 再 `clear()`，并重置上传位。query key 都以 userId 开头，旧用户的请求晚返回也不会写进新用户的数据。
+- 切换用户时，先 `cancelQueries()` 取消进行中的请求，再用 `removeQueries()` 删除除 `me` 以外的查询，最后对 `me` 执行 `setQueryData` 写入新用户，并重置上传位。不用 `clear()`：它会连 `me` 一起删掉，已挂载的 `useMe()` 收不到新用户。query key 都以 userId 开头，旧用户的请求晚返回也不会写进新用户的数据。
 - 刷新页面后，从后端拉取历史，未结束的卡片挂载后自动恢复轮询。
 
 ## 11. 测试重点
