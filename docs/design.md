@@ -157,6 +157,7 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 - 查询出错时，卡片保留上次的数据，并显示"状态查询失败 · 重试"。这和任务 FAILED 是两种不同的展示。连续失败 3 次后暂停自动轮询，点重试或 History 的刷新按钮可以恢复。
 - 切换用户时，先 `cancelQueries()` 取消进行中的请求，再用 `removeQueries()` 删除除 `me` 以外的查询，最后对 `me` 执行 `setQueryData` 写入新用户，并重置上传位。不用 `clear()`：它会连 `me` 一起删掉，已挂载的 `useMe()` 收不到新用户。query key 都以 userId 开头，旧用户的请求晚返回也不会写进新用户的数据。
 - 刷新页面后，从后端拉取历史，未结束的卡片挂载后自动恢复轮询。
+- `useMe()` 在水合完成前一律返回"加载中"（`useHydrated`）。详情页的内容在 Suspense 边界里流式到达，`/api/me` 可能先于边界水合返回，直接用缓存渲染会和服务端 HTML 不一致（React #418）。
 
 ## 11. 测试重点
 

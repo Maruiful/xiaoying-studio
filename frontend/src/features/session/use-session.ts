@@ -1,14 +1,23 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type UseQueryResult,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { qk } from "@/lib/query-keys";
+import { useHydrated } from "@/lib/use-hydrated";
 import { createUser, getMe, switchUser } from "./api";
 import { rememberUser } from "./recent-users";
 import type { User } from "./types";
 
-/** 当前用户。首次请求时后端会创建匿名用户并签发 cookie。 */
-export function useMe() {
-  return useQuery({
+/**
+ * 当前用户。首次请求时后端会创建匿名用户并签发 cookie。
+ * 水合完成前一律返回"加载中"，与服务端渲染的 HTML 一致（原因见 useHydrated）。
+ */
+export function useMe(): UseQueryResult<User, Error> {
+  const query = useQuery({
     queryKey: qk.me,
     queryFn: async () => {
       const user = await getMe();
@@ -18,6 +27,21 @@ export function useMe() {
     // 身份只在新建或切换时变化，由下面的 mutation 主动更新
     staleTime: Infinity,
   });
+  const hydrated = useHydrated();
+  if (hydrated) return query;
+  return {
+    ...query,
+    data: undefined,
+    error: null,
+    status: "pending",
+    isPending: true,
+    isLoading: true,
+    isSuccess: false,
+    isError: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    isPlaceholderData: false,
+  } as UseQueryResult<User, Error>;
 }
 
 function useApplyUser() {
