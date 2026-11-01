@@ -61,6 +61,11 @@ export function TaskCard({
         </div>
       </div>
 
+      {/* 读屏播报：只在状态变化时朗读（live 区域挂载时的初始内容不会播报），不随阶段进度反复朗读 */}
+      <p aria-live="polite" className="sr-only">
+        {task.templateTitle}：{STATUS_LABELS[task.status]}
+      </p>
+
       <div className="flex flex-col gap-3 p-3">
         <header className="min-w-0">
           <h3 id={`task-${task.id}-title`} className="truncate font-medium">
@@ -85,11 +90,14 @@ export function TaskCard({
               状态查询失败{paused ? "，已暂停自动刷新" : "，正在重试"}：
               {queryError.message}
             </span>
+            {/* aria-disabled：查询期间保留焦点，见 task-history 的刷新按钮 */}
             <button
               type="button"
-              onClick={retry}
-              disabled={fetching}
-              className="shrink-0 rounded px-2 py-1 text-accent hover:bg-surface disabled:opacity-50"
+              onClick={() => {
+                if (!fetching) retry();
+              }}
+              aria-disabled={fetching}
+              className="shrink-0 rounded px-2 py-1 text-accent hover:bg-surface aria-disabled:opacity-50"
             >
               {fetching ? "查询中…" : "重试"}
             </button>

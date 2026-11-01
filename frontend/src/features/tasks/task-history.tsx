@@ -52,12 +52,15 @@ function HistoryBody({
             </span>
           )}
         </h2>
+        {/* 用 aria-disabled 而不是 disabled：disabled 会让按钮失去焦点，键盘用户的焦点会掉到页面顶部 */}
         <button
           type="button"
-          onClick={refresh}
-          disabled={history.isFetching}
+          onClick={() => {
+            if (!history.isFetching) refresh();
+          }}
+          aria-disabled={history.isFetching}
           aria-label="刷新历史"
-          className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-raised hover:text-foreground disabled:opacity-50"
+          className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-raised hover:text-foreground aria-disabled:opacity-50"
         >
           <span
             aria-hidden="true"
