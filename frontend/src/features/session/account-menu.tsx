@@ -49,14 +49,14 @@ export function AccountMenu() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-20 bg-black/60" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-30 max-h-[85vh] w-[min(92vw,480px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-xl">
+        <Dialog.Content className="fixed top-1/2 left-1/2 z-30 max-h-[85vh] w-[min(92vw,560px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-border bg-surface p-7 shadow-xl">
           <div className="mb-5 flex items-center justify-between">
-            <Dialog.Title className="text-lg font-semibold">
+            <Dialog.Title className="text-xl font-semibold">
               账号设置
             </Dialog.Title>
             <Dialog.Close
               aria-label="关闭"
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-raised hover:text-foreground"
+              className="grid h-9 w-9 place-items-center rounded-xl bg-background text-muted hover:bg-surface-raised hover:text-foreground"
             >
               <span aria-hidden="true">✕</span>
             </Dialog.Close>

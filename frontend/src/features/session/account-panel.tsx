@@ -16,11 +16,11 @@ export function AccountPanel({ user }: { user: User }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-xl bg-surface-raised p-4">
+      <section className="rounded-2xl bg-surface-raised p-4">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
-            className="grid h-12 w-12 place-items-center rounded-full bg-accent text-lg font-semibold text-accent-foreground"
+            className="grid h-16 w-16 place-items-center rounded-full bg-accent text-2xl font-semibold text-accent-foreground"
           >
             {user.id.slice(0, 1).toUpperCase()}
           </span>
@@ -32,7 +32,7 @@ export function AccountPanel({ user }: { user: User }) {
           </div>
         </div>
         <div className="mt-4 border-t border-border pt-4">
-          <p className="text-xs text-muted">用户 ID</p>
+          <p className="text-sm text-muted">用户 ID</p>
           <div className="mt-1 flex items-center gap-2">
             <code className="min-w-0 flex-1 truncate font-mono text-sm">
               {user.id}
@@ -66,9 +66,9 @@ export function AccountPanel({ user }: { user: User }) {
           </p>
         )}
 
-        <ul className="mt-3 divide-y divide-border rounded-xl border border-border">
+        <ul className="mt-3 divide-y divide-border rounded-2xl border border-border">
           {recent.map((id) => (
-            <li key={id} className="flex items-center gap-3 px-4 py-3">
+            <li key={id} className="flex items-center gap-3 px-4 py-3.5">
               <code className="min-w-0 flex-1 truncate font-mono text-sm">
                 {id}
               </code>
@@ -82,7 +82,7 @@ export function AccountPanel({ user }: { user: User }) {
                   aria-label={`切换到用户 ${id.slice(0, 8)}`}
                   className="rounded-lg px-3 py-1 text-sm hover:bg-surface-raised disabled:opacity-50"
                 >
-                  切换
+                  切换<span aria-hidden="true"> ›</span>
                 </button>
               )}
             </li>
