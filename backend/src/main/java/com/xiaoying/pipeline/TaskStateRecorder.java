@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -62,7 +63,8 @@ public class TaskStateRecorder {
     }
 
     /** 还没开始执行就失败（线程池拒绝）。 */
-    @Transactional
+    // afterCommit 回调执行时原事务的资源仍可能绑定在线程上，必须另起事务提交拒绝结果。
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean failedBeforeStart(long taskId, String reason) {
         return taskMapper.markFailedWhilePending(taskId, reason, now()) == 1;
     }
