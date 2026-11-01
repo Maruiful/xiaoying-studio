@@ -292,7 +292,8 @@ describe("提交与切换用户", () => {
     await act(async () => {
       await result.current.switchUser.mutateAsync(USER_B);
     });
-    expect(result.current.userId).toBe(USER_B);
+    // 缓存更新的通知由 TanStack Query 批量调度到下一个 tick，可能晚于 act 返回，所以用 waitFor 等待
+    await waitFor(() => expect(result.current.userId).toBe(USER_B));
     expect(result.current.tracked.task.id).toBe(2);
 
     // 等 A 的请求在服务端返回之后再检查

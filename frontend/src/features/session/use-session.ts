@@ -23,11 +23,17 @@ export function useMe() {
 function useApplyUser() {
   const queryClient = useQueryClient();
   return async (user: User) => {
-    // 先取消进行中的请求（包括轮询），再清空缓存，最后写入新用户。
+    // 先取消进行中的请求（包括轮询），再删掉上一个用户的数据，最后更新当前用户。
     // 和用户有关的 key 都以 userId 开头，旧请求即使晚返回也只会写进旧用户的 key，
-    // 而旧 key 已经没有观察者，不会显示出来。
+    // 而旧 key 已经被删除，不会显示出来。
+    //
+    // 不能用 queryClient.clear()：它会连 me 查询一起删掉，正在使用 useMe() 的组件
+    // 还挂在被删的旧查询上，收不到新用户，直到碰巧重新渲染。所以保留 me 查询，
+    // 在它上面 setQueryData，所有观察者都会收到通知。
     await queryClient.cancelQueries();
-    queryClient.clear();
+    queryClient.removeQueries({
+      predicate: (query) => query.queryKey[0] !== qk.me[0],
+    });
     queryClient.setQueryData(qk.me, user);
     rememberUser(user.id);
   };

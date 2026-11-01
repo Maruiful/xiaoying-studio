@@ -30,3 +30,4 @@ AI 生成的代码被测试或审查发现问题并修正时记录在这里，�
 - **测试里 `React is not defined`**：tsconfig 的 `jsx: preserve` 是给 Next 用的，Vitest 用 esbuild 转换 `.tsx` 时按经典运行时处理。修正：`vitest.config.mts` 设 `esbuild.jsx: "automatic"`。
 - **切换用户测试的写法有误**：AI 第一版测试在切换后才卸载用户 A 的组件，卸载前组件又用 `initialData` 重建了 A 的缓存，断言失败。实际页面在切换后按新 userId 渲染，不会这样。改为在一个 hook 里按 `useMe()` 决定跟踪哪个用户的任务，与页面行为一致。
 - 连续失败次数没有用 TanStack Query 的 `fetchFailureCount`，因为每次重新请求它都会清零（读 query-core 源码确认），改为在 hook 里自己记录。
+- **CI 上切换用户的测试失败（本地通过）**：GitHub Actions 报切换后 `useMe()` 仍是旧用户。原因是 `useApplyUser` 用了 `queryClient.clear()`，把 `me` 查询本身也删了，已挂载的 `useMe()` 还订阅着被删的旧查询，收不到新用户；本地机器慢时碰巧重新渲染才通过。这在页面上也会出现（切换后顶栏和列表可能停在旧用户）。修正：改为 `removeQueries` 删除除 `me` 以外的查询，再对 `me` 做 `setQueryData` 通知所有观察者；测试里切换后的断言改用 `waitFor`，不依赖通知的调度时机。
