@@ -44,7 +44,9 @@ export function AccountMenu() {
           >
             {me.data.id.slice(0, 1).toUpperCase()}
           </span>
-          <span className="font-mono text-muted">{me.data.id.slice(0, 8)}</span>
+          <span className="hidden font-mono text-muted sm:inline">
+            {me.data.id.slice(0, 8)}
+          </span>
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
