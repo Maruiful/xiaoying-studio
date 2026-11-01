@@ -175,6 +175,6 @@ stage:   null ▶ CHECK_ASSETS ▶ GENERATE ▶ ORGANIZE_RESULT
 - 切换用户后，旧请求不会覆盖新用户的数据。
 - 上传位的状态流转。
 
-## 12. 待定
+## 12. 已定事项
 
-- 模板封面和预置结果图的来源。倾向于自己制作，避免版权问题，来源写进 README。
+- 模板封面和预置结果图由 `scripts/generate-demo-assets.mjs` 生成 SVG，不使用第三方图片，来源写在 README。

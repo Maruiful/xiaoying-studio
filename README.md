@@ -2,7 +2,7 @@
 
 素材制作网站：浏览模板、上传图片、提交制作任务，Java 后端按三步异步执行模拟生成，前端跟踪任务状态并展示历史结果。题目见 [`要求.md`](要求.md)，设计见 [`docs/design.md`](docs/design.md)，开发规范见 [`docs/conventions.md`](docs/conventions.md)。
 
-> 当前进度：阶段 5（任务前端）。下面标注"待补充"的章节会随开发推进补全。
+> **验收版本**：tag `v1.0`，对应的 commit 可以用 `git rev-parse v1.0` 查看。完成情况见[已完成与未完成](#已完成与未完成)。
 
 ## 技术版本
 
@@ -82,7 +82,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 | `DB_HOST` / `DB_PORT` / `DB_NAME` | 数据库地址 | `localhost` / `3306` / `xiaoying` |
 | `DB_USER` / `DB_PASSWORD` | 数据库账号（示例值，非真实凭据） | `xiaoying` / `xiaoying` |
 | `STORAGE_DIR` | 上传素材和结果图的存储目录（Compose 中为数据卷 `/data`） | `./data` |
-| `COOKIE_SECURE` | 身份 cookie 是否加 `Secure`，部署到 https 时设为 `true` | `false` |
+| `COOKIE_SECURE` | 身份 cookie 是否加 `Secure`，部署到 https 时设为 `true`（Compose 中已传给后端） | `false` |
 | `BACKEND_URL` | 前端转发的后端地址 | `http://localhost:8080` |
 | `NPM_REGISTRY` | 前端镜像构建使用的 npm 源 | `https://registry.npmjs.org` |
 
@@ -194,21 +194,24 @@ curl -X PUT http://localhost:3000/api/dev/simulation -H 'content-type: applicati
 | 素材上传中 | 上传位显示"上传中…"，提交按钮不可用 |
 | 提交请求中 | 按钮显示"提交中…"，上传位暂时锁定 |
 | 已受理 | 立即在制作记录里插入一张"等待处理"的卡片，上传位清空，按钮恢复可用，可以接着提交 |
-| 等待处理／处理中 | 卡片显示整体状态和三个阶段的进度，阶段完全来自后端记录 |
-| 成功 | 显示结果图，点击在新窗口打开 |
-| 任务失败 | 红色提示：失败阶段和原因（来自后端 `failReason`） |
-| 状态查询失败 | 灰色提示"状态查询失败"和"重试"按钮，卡片保留上次的数据，**不会**显示成任务失败 |
+| 等待处理／处理中 | 卡片预览区显示当前阶段（如"模拟生成中…"），右上角是整体状态，下方是三个阶段的进度条；阶段完全来自后端记录 |
+| 成功 | 预览区显示结果图，点击在新窗口打开 |
+| 任务失败 | 预览区显示红色的失败阶段和原因（来自后端 `failReason`） |
+| 状态查询失败 | 卡片底部灰色提示"状态查询失败"和"重试"按钮，卡片保留上次的数据，**不会**显示成任务失败 |
+
+任务状态变化时（等待处理、处理中、已完成、制作失败）读屏会播报一次，阶段切换不重复播报。
 
 **状态跟踪方式**（TanStack Query 轮询）
 
 - 每张未结束的任务卡片有自己的查询，每秒查一次 `GET /api/tasks/{id}`。任务进入成功或失败后停止。没有未结束任务时不发任何轮询请求。
 - 查询出错时保留已有数据。同一个任务连续失败 3 次后暂停自动轮询，点卡片上的"重试"或历史标题旁的刷新按钮可以恢复。
 - 历史列表和单任务查询是两个请求。用列表数据更新卡片时，只接受进度不落后的数据，已结束的任务不会被较旧的列表响应改回处理中。
-- query key 都以 userId 开头。切换用户时先取消进行中的请求，再清空缓存，上传位也会重置（已上传的素材属于上一个用户）。旧用户晚返回的请求不会出现在新用户的界面上。
+- query key 都以 userId 开头。切换用户时先取消进行中的请求，再删除除当前用户（`me`）以外的全部缓存，然后写入新用户；上传位也会重置（已上传的素材属于上一个用户）。旧用户晚返回的请求只会写进已删除的旧 key，不会出现在新用户的界面上。
 - 刷新页面后从后端重新拉取历史，未结束的任务自动接着轮询。
 
 **演示**
 
+0. 默认配置下提交一个任务，约 5 秒后卡片依次经过三个阶段，显示结果图（演示成功）。
 1. 按上面"模拟控制"把 `generateMs` 调到 8000，连续提交 3 个任务，可以看到几张卡片各自推进。
 2. 设 `failStage` 为 `GENERATE` 再提交，卡片显示"模拟生成失败"。
 3. 任务处理中时刷新页面，卡片恢复并继续更新。
@@ -236,12 +239,139 @@ curl -X PUT http://localhost:3000/api/dev/simulation -H 'content-type: applicati
 
 **限制**：userId 本身就是凭证，知道某个 userId 的人就能切换成该用户。这是演示方案，没有密码或签名。正式产品需要换成登录体系，或者给 cookie 加签名并去掉"切换到任意用户"的接口。
 
+## 测试
+
+| 位置 | 覆盖的核心行为 |
+|---|---|
+| `backend/.../task/TaskFlowIT.java`（Testcontainers + MySQL） | 提交立即返回；三步按顺序执行并成功；指定阶段失败后停止后续步骤并记录阶段和原因；配置快照；查询不推动任务；终态不再变化；多任务并发互不影响；按用户隔离；启动时清理中断的任务 |
+| `backend/.../pipeline/TaskPipelineTest.java`、`task/TaskDispatcherTest.java` | 流水线步骤顺序、前置状态条件不满足时停止、未预期异常记为失败；线程池队列满时记为"系统繁忙" |
+| `backend/.../asset/AssetUploadIT.java`、`ImageTypeTest.java` | 上传校验（空文件、大小、按文件头判断真实类型）、素材归属 |
+| `frontend/src/features/tasks/use-tasks.test.tsx`（Vitest + MSW） | 终态后停止轮询；查询失败保留数据、不当成任务失败、连续失败后暂停、重试可恢复；多个任务互不干扰；受理后立即出现在历史；切换用户后旧请求不写进新用户的缓存 |
+
+后端 58 个（含参数化展开）、前端 48 个测试用例。运行方式见上面[本地开发](#本地开发)，CI 在每次 push 时运行全部测试。
+
+## 部署与回滚
+
+本项目只提供 Compose 部署，没有接入发布平台。以下步骤在部署机（装有 Docker 的服务器）上执行。
+
+**部署**
+
+```bash
+git clone <仓库地址> xiaoying && cd xiaoying
+git checkout <要部署的 commit>
+cp .env.example .env
+# 修改 .env：DB_PASSWORD、DB_ROOT_PASSWORD 改为强密码；DEV_API_ENABLED=false 关闭模拟控制接口；https 部署设 COOKIE_SECURE=true
+docker compose up --build -d
+docker compose ps              # 三个服务都是 healthy / running 后即可访问
+```
+
+- 后端启动时由 Flyway 执行尚未执行过的迁移，不需要手动建表。
+- MySQL 只在数据卷为空时按 `.env` 初始化账号。之后再改 `.env` 里的密码不会改到数据库，需要进 MySQL 用 `ALTER USER` 修改。
+- 部署到 https 时，在 `.env` 里设 `COOKIE_SECURE=true`，身份 cookie 会加上 `Secure`。
+
+**升级**：`git pull`（或 checkout 新的 commit）后再执行 `docker compose up --build -d`。数据卷 `mysql-data`、`backend-data` 保留。升级前先按下面的方法备份。
+
+**备份**
+
+```bash
+docker compose exec mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" xiaoying' > backup-$(date +%Y%m%d%H%M).sql
+docker run --rm -v xiaoying_backend-data:/data -v "$PWD":/backup alpine tar czf /backup/files-$(date +%Y%m%d%H%M).tgz -C /data .
+```
+
+数据卷名前缀取决于项目目录名，可用 `docker volume ls` 确认。
+
+**回滚**
+
+1. `git checkout <上一个正常的 commit>`，执行 `docker compose up --build -d`。
+2. 如果两个版本之间没有新增 Flyway 迁移，到这一步就完成了。
+3. 如果新版本加了迁移：Flyway 只向前执行，不会撤销已执行的迁移。旧版本启动时会忽略它不认识的新版本迁移（Flyway 默认行为），但表结构已经是新的，旧代码能否正常读写取决于改了什么。没有把握时，用升级前的备份恢复数据库：
+
+```bash
+docker compose stop backend frontend
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE xiaoying; CREATE DATABASE xiaoying CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"'
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" xiaoying' < backup-XXXX.sql
+docker compose up -d
+```
+
+恢复会丢掉升级之后产生的数据。迁移文件执行过后不再修改，表结构变化都通过新增版本完成，所以每个 commit 对应的表结构是确定的。
+
+## 已完成与未完成
+
+**已完成**（对应 [`要求.md`](要求.md) 的需求编号）
+
+| 需求 | 实现位置 |
+|---|---|
+| R-01 技术栈与职责 | 业务和持久化都在 Java，Next.js 只渲染页面和转发 `/api/*` |
+| R-02 列表与模拟数据 | Flyway 种子数据、`/api/categories`、`/api/templates?category=` |
+| R-03 详情、上传与校验 | 见[素材上传](#素材上传)；加载中、不存在、请求失败、空分类都有界面反馈 |
+| R-04 受理与异步执行 | `afterCommit` 后派发到有界线程池，接口返回 202 |
+| R-05 多步骤状态与查询 | `task` + `task_step` 表，每步独立的短事务；查询只读 |
+| R-06 失败与模拟控制 | 环境变量和 `/api/dev/simulation`，见[模拟控制](#模拟控制调整耗时指定阶段失败) |
+| R-07 状态表达与请求异常 | 见[前端：提交、制作记录与状态跟踪](#前端提交制作记录与状态跟踪) |
+| R-08 多任务与查询生命周期 | 每个任务一个查询，终态停止；切换用户时取消请求并清理缓存 |
+| R-09 刷新恢复与结果记录 | 历史从后端拉取，未结束的任务自动接着轮询 |
+| R-10 用户身份与个人记录 | 见[用户身份与个人记录](#用户身份与个人记录) |
+| R-11 参考界面与交互 | 按 `resources/` 三张截图调整布局；小屏单列可操作；键盘焦点、对话框焦点、读屏标签与播报、文字对比度（均达 WCAG AA 4.5:1） |
+| R-12 CI 与关键测试 | 见 [CI](#ci) 和[测试](#测试) |
+| R-13 提交材料 | 本 README |
+| R-14 容器交付 | `docker compose up --build` 启动三个服务和初始化数据 |
+
+**未实现，按题目说明不在范围内**：积分和计费、删除记录、重新制作、语言切换、真实图片处理、模板管理后台。参考截图中的这些入口都没有做。
+
+**边界与取舍**
+
+- **服务重启后不恢复执行**：任务只在内存线程池里执行。后端启动时会把上次进程留下的 `PENDING`／`RUNNING` 任务记为失败，原因是"服务重启，处理被中断"，不会一直显示处理中。没有做断点续跑：三步都是模拟的，续跑需要为每一步设计幂等和恢复点，收益不大。
+- **提交不做幂等**：重复点击由前端拦截（提交中按钮不可用）。网络超时后用户再提交一次，会产生两个任务。要做幂等可以让前端生成 `Idempotency-Key`，后端加唯一索引，这次没有做。
+- **不自动重试失败任务**：失败是模拟出来的，题目也不要求重新执行。
+- **单实例**：线程池和模拟配置都在进程内，多实例部署需要换成数据库或消息队列来分配任务。
+
 ## 已知限制
 
 - 访问不存在的模板（如 `/templates/nope`）时页面显示"模板不存在"，但 HTTP 状态码是 200。原因是详情页的 `loading.tsx` 骨架屏会先以 200 流式发出，之后才判断出模板不存在；Next.js 会为该页面加上 `noindex`。接口 `/api/templates/nope` 本身返回 404。
+- userId 本身就是凭证，见[用户身份](#用户身份与个人记录)的限制说明。
+- 边框色和面板背景的对比度是 1.27:1，低于 WCAG 对界面组件边界的 3:1。上传位靠更亮的底色和文字识别，边框只是装饰。
+- 模拟配置只保存在内存中，后端重启后恢复为环境变量的值。
 
-## 待补充
+## 实际投入
 
-- 已完成／未完成项、已知限制、实际投入
-- 部署与回滚
-- AI 使用说明与工作流
+约 9 小时，分布在 2026-10-31 下午至 2026-11-01 下午，共 6 段。
+
+统计方法：按 AI 编程工具会话记录里每条消息的时间戳，相邻两条间隔小于 30 分钟的算作连续工作，累加得到 8.9 小时（间隔阈值取 10 分钟时是 7.5 小时）。会话之外的时间没有算进去，例如开始前读题，以及在浏览器里手动检查页面的部分时间。
+
+| 时间段 | 时长 | 内容 |
+|---|---|---|
+| 10-31 14:12–17:52 | 约 3 小时 | 需求整理、设计与规范文档、阶段 0 骨架 |
+| 10-31 22:12–11-01 01:25 | 约 3.2 小时 | 阶段 1～5：模板、身份、上传、任务后端、任务前端 |
+| 11-01 11:27–15:47 | 约 2.5 小时 | CI 问题修复、阶段 6 界面与可访问性、阶段 7 交付文档 |
+
+各阶段的具体内容见提交历史。
+
+## AI 使用说明
+
+本项目使用了 AI 编程工具（Claude Code）。代码大部分由 AI 生成，需求拆解、方案取舍、验收和问题判断由我负责。
+
+**工作流**
+
+1. **先写文档，再写代码**：开始编码前，先和 AI 一起把题目整理成 [`docs/design.md`](docs/design.md)（阶段划分、表结构、状态机、接口、前端状态管理）和 [`docs/conventions.md`](docs/conventions.md)（事务边界、状态更新必须带前置条件、query key 以 userId 开头等）。[`AGENTS.md`](AGENTS.md) 列出不能违反的约束，AI 每次会话开始时都会读到。这样上下文写在仓库里，不依赖聊天记录。
+2. **按阶段拆分**：design.md 第 1 节把工作分成 0～7 共 8 个阶段，每个阶段交付一个可演示的切片（表、接口、页面、测试）。开始一个阶段前先确认范围，题外功能（积分、删除、重新制作）一律不做。
+3. **生成与修改**：AI 先读相关的现有代码再改，沿用已有写法。和设计不一致时先停下来问我，确认后同步更新文档。
+4. **验证**：每次改动后运行受影响部分的检查（后端 `./mvnw verify`，前端 `lint`、`typecheck`、`test`），如实报告结果。界面调整用 Playwright 截图和参考图对比；构建和启动由我在自己的终端执行，AI 截图前先确认容器里是新代码。
+5. **记录修正**：AI 生成的代码被测试、CI 或我发现问题时，记到 [`docs/ai-log.md`](docs/ai-log.md)，写明问题、怎么发现的、怎么改的。
+
+**例子：切换用户后界面停在旧用户**
+
+阶段 5 的前端测试在本地全部通过，push 后 GitHub Actions 上"切换用户"的用例失败了：切换后 `useMe()` 返回的仍是旧用户。
+
+- **排查**：AI 生成的切换逻辑用了 `queryClient.clear()`。它把 `me` 查询本身也删掉了，已经挂载的 `useMe()` 还订阅着被删除的旧查询，收不到新用户。本地机器慢，组件碰巧重新渲染了，所以本地能通过。这个问题在真实页面上同样会出现。
+- **修正**：改为 `removeQueries` 删除 `me` 以外的查询，再对 `me` 执行 `setQueryData`，让所有订阅者都收到通知。测试中切换后的断言改用 `waitFor`，不依赖通知的调度时机。同时更新了 design.md 的对应描述。
+- **收获**：本地通过不代表正确，时序相关的问题要在不同速度的环境下验证。之后排查详情页偶发的 React #418 水合报错时，也是先用 Playwright 改变 `/api/me` 的响应时间、统计复现次数来确认原因，再动手修改。
+
+其余记录见 [`docs/ai-log.md`](docs/ai-log.md)。
+
+## 第三方代码与素材来源
+
+- **脚手架**：前端由 `create-next-app` 生成后修改（ESLint、Tailwind、TypeScript 配置）；后端的 `mvnw`、`mvnw.cmd` 是 Maven Wrapper 官方脚本，项目结构按 Spring Boot 惯例手写。
+- **开源依赖**：版本见[技术版本](#技术版本)和锁文件。界面组件中只有账号对话框用了 `@radix-ui/react-dialog`（处理焦点限制、Esc 关闭和读屏属性），其余都是自己写的 Tailwind 组件。
+- **图片素材**：模板封面和模拟结果图都由本项目的 `scripts/generate-demo-assets.mjs` 生成（SVG 渐变和简单图形），没有使用第三方图片。
+- **参考截图**：`resources/` 下的三张截图随题目提供，只用来参考布局。
+

@@ -30,6 +30,8 @@ services:
       DB_USER: ${DB_USER:-xiaoying}
       DB_PASSWORD: ${DB_PASSWORD:-xiaoying}
       STORAGE_DIR: /data
+      # 部署到 https 时设为 true，身份 cookie 加 Secure
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       # 演示用：开放 /api/dev/simulation，可调整耗时、指定失败阶段
       DEV_API_ENABLED: ${DEV_API_ENABLED:-true}
       SIM_CHECK_ASSETS_MS: ${SIM_CHECK_ASSETS_MS:-1000}
