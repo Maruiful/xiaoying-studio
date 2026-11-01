@@ -42,6 +42,14 @@ pnpm dev
 docker compose up --build
 ```
 
+## 当前开发机的验收约定
+
+- Compose 构建、启动和镜像拉取由开发者在自己的终端执行；Agent 给出命令，不自行执行这些操作。
+- 本机直连 Docker Hub 较慢；拉取 `mysql:8.0` 曾在 ustc 镜像源卡住。必要时由开发者先从 `docker.xuanyuan.run/` 前缀拉取，再 tag 回原名；项目与 CI 仍使用原镜像名。
+- 截图只使用 Compose 的 3000 端口，截图前确认容器已使用新代码；Agent 不另起 `pnpm dev`。
+- 本机版本：Java 17、Maven 3.9.9、Node 20.16、pnpm 10.28、Docker 28、MySQL 8.0.26。不要把这些本机版本误写成容器内版本。
+- 本机没有 `gh`；查 CI 使用 GitHub 公开 API，注意每 IP 每小时 60 次的限额，不频繁轮询。
+
 ## 必须遵守的约束
 
 以下约束对应题目的核心评分点，违反时宁可停下来询问，也不要绕过。

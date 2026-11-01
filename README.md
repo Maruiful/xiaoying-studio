@@ -2,7 +2,7 @@
 
 素材制作网站：浏览模板、上传图片、提交制作任务，Java 后端按三步异步执行模拟生成，前端跟踪任务状态并展示历史结果。题目见 [`要求.md`](要求.md)，设计见 [`docs/design.md`](docs/design.md)，开发规范见 [`docs/conventions.md`](docs/conventions.md)。
 
-> **验收版本**：tag `v1.0`，对应的 commit 可以用 `git rev-parse v1.0` 查看。完成情况见[已完成与未完成](#已完成与未完成)。
+> **验收基线**：tag `v1.0` 对应首次完成版本，本次复查修复在后续提交中；交付时以 `main` 的最新 commit 为准。完成情况见[已完成与未完成](#已完成与未完成)。
 
 ## 技术版本
 
@@ -96,6 +96,18 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - 模板封面和模拟结果图都是本项目用脚本生成的 SVG（`scripts/generate-demo-assets.mjs`，渐变加简单图形），没有使用第三方图片。重新生成：`node scripts/generate-demo-assets.mjs`。
 - 封面位于 `backend/src/main/resources/demo/covers/`，由后端 `/api/files/demo/**` 提供访问。
 
+### 分类与模板接口
+
+以下接口无需用户身份，数据由 Java 从 MySQL 的种子记录读取。图片地址可通过同源 `/api/files/demo/**` 访问。
+
+| 接口 | 请求 | 成功响应 |
+|---|---|---|
+| `GET /api/categories` | 无参数 | 分类数组，每项为 `{id, name}` |
+| `GET /api/templates` | 可选查询参数 `category`（分类 ID）；不传则返回全部 | 模板卡片数组，每项为 `{id, categoryId, title, coverUrl, requiredImageCount}` |
+| `GET /api/templates/{id}` | 路径参数 `id`（模板 ID） | `{id, categoryId, categoryName, title, coverUrl, description, requiredImageCount, acceptedMimeTypes, maxFileSizeBytes}`；不存在返回 404 `TEMPLATE_NOT_FOUND` |
+
+`acceptedMimeTypes` 是允许的 MIME 类型字符串数组，`maxFileSizeBytes` 是单张图片的字节上限。
+
 ## 素材上传
 
 详情页按模板要求的数量显示上传位，每张图片单独上传。
@@ -154,7 +166,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 |---|---|
 | `POST /api/tasks` | 请求 `{templateId, assetIds[]}`（按上传位顺序）。返回 202 `{taskId}` |
 | `GET /api/tasks/{id}` | 返回 `TaskVO`，其他用户的任务返回 404 |
-| `GET /api/tasks?page=1&size=20` | 当前用户的历史，按创建时间倒序。返回 `{items, total, page, size}`，`size` 最大 50 |
+| `GET /api/tasks?page=1&size=20` | 当前用户的历史，按创建时间倒序。返回 `{items, total, page, size}`，`size` 最大 50；前端逐页读取全部历史 |
 | `GET /api/files/results/{taskId}` | 成功任务的结果图（SVG），只有任务主人能访问 |
 
 `TaskVO` 字段：`id`、`templateId`、`templateTitle`、`status`、`stage`、`resultUrl`（仅成功时）、`failReason`（仅失败时）、`createdAt`、`startedAt`、`finishedAt`。
@@ -334,15 +346,16 @@ docker compose up -d
 
 ## 实际投入
 
-约 9 小时，分布在 2026-10-31 下午至 2026-11-01 下午，共 6 段。
+约 10 小时，分布在 2026-10-31 下午至 2026-11-01 下午，共 7 段。
 
-统计方法：按 AI 编程工具会话记录里每条消息的时间戳，相邻两条间隔小于 30 分钟的算作连续工作，累加得到 8.9 小时（间隔阈值取 10 分钟时是 7.5 小时）。会话之外的时间没有算进去，例如开始前读题，以及在浏览器里手动检查页面的部分时间。
+统计方法：前 6 段按 AI 编程工具会话记录里每条消息的时间戳，相邻两条间隔小于 30 分钟的算作连续工作，累加得到 8.9 小时（间隔阈值取 10 分钟时是 7.5 小时）；本次复查与修复约 1 小时。会话之外的时间没有算进去，例如开始前读题，以及在浏览器里手动检查页面的部分时间。
 
 | 时间段 | 时长 | 内容 |
 |---|---|---|
 | 10-31 14:12–17:52 | 约 3 小时 | 需求整理、设计与规范文档、阶段 0 骨架 |
 | 10-31 22:12–11-01 01:25 | 约 3.2 小时 | 阶段 1～5：模板、身份、上传、任务后端、任务前端 |
 | 11-01 11:27–15:47 | 约 2.5 小时 | CI 问题修复、阶段 6 界面与可访问性、阶段 7 交付文档 |
+| 11-01 17:02–18:07 | 约 1 小时 | 对照 R-01～R-14 复查、修复线程池拒绝路径与历史分页、补回归测试和接口文档、核验新镜像 |
 
 各阶段的具体内容见提交历史。
 
