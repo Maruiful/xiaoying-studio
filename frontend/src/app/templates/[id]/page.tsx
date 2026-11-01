@@ -22,10 +22,11 @@ export default async function TemplatePage({ params }: Props) {
   if (!template) notFound();
 
   return (
-    <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-6 sm:px-6 md:grid-cols-[minmax(320px,420px)_1fr]">
+    // md 及以上两栏占满视口高度（减去 3.5rem 顶栏），各自滚动，开始制作按钮固定在左栏底部
+    <main className="mx-auto grid max-w-[1600px] gap-2 p-2 md:h-[calc(100dvh-3.5rem)] md:grid-cols-[minmax(320px,425px)_1fr]">
       <section
         aria-labelledby="template-title"
-        className="flex flex-col gap-5 rounded-2xl bg-surface p-5"
+        className="flex flex-col gap-5 rounded-2xl bg-surface p-5 pb-0 md:overflow-y-auto"
       >
         <div className="flex items-center gap-2">
           <Link
@@ -55,7 +56,7 @@ export default async function TemplatePage({ params }: Props) {
 
       <section
         aria-labelledby="history-heading"
-        className="rounded-2xl bg-surface p-5"
+        className="rounded-2xl bg-surface p-5 md:overflow-y-auto"
       >
         <TaskHistory headingId="history-heading" />
       </section>

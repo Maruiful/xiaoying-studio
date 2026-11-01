@@ -5,7 +5,7 @@ export function TemplateCard({ template }: { template: TemplateCardData }) {
   return (
     <Link
       href={`/templates/${encodeURIComponent(template.id)}`}
-      className="group relative block aspect-[3/4] overflow-hidden rounded-xl bg-surface"
+      className="group relative block aspect-[9/16] overflow-hidden rounded-lg bg-surface"
     >
       {/* 封面由后端提供（SVG/上传图），不经过 next/image 优化 */}
       <img

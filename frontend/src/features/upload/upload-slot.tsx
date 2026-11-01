@@ -9,6 +9,8 @@ type Props = {
   accept: string;
   /** 提交任务期间禁止修改 */
   disabled?: boolean;
+  /** 只有一个上传位时占满一行，用横向比例，避免方块过高 */
+  wide?: boolean;
   onSelect: (file: File) => void;
   onRemove: () => void;
 };
@@ -19,12 +21,14 @@ export function UploadSlot({
   slot,
   accept,
   disabled = false,
+  wide = false,
   onSelect,
   onRemove,
 }: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const label = `第 ${index + 1} 张图片`;
+  const aspect = wide ? "aspect-[5/2]" : "aspect-square";
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -50,7 +54,7 @@ export function UploadSlot({
       <label
         htmlFor={inputId}
         aria-disabled={disabled}
-        className="flex aspect-square cursor-pointer aria-disabled:cursor-not-allowed aria-disabled:opacity-50 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-raised text-sm text-muted transition-colors hover:border-accent hover:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent"
+        className={`flex ${aspect} cursor-pointer aria-disabled:cursor-not-allowed aria-disabled:opacity-50 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface-raised text-sm text-muted transition-colors hover:border-accent hover:text-foreground has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent`}
       >
         {input}
         <span
@@ -67,7 +71,9 @@ export function UploadSlot({
   const status = statusText(slot);
 
   return (
-    <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-surface-raised">
+    <div
+      className={`relative ${aspect} overflow-hidden rounded-xl border border-border bg-surface-raised`}
+    >
       {input}
       {slot.previewUrl && (
         <img

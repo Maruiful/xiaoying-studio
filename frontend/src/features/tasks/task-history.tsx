@@ -94,7 +94,7 @@ function HistoryBody({
           还没有制作记录。上传素材并点击“开始制作”后，任务会显示在这里。
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
           {tasks.map((task) => (
             <li key={task.id}>
               <TaskCard userId={userId} initial={task} />
@@ -108,13 +108,13 @@ function HistoryBody({
 
 function ListSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
       <span className="sr-only">正在加载制作记录</span>
       {[0, 1].map((i) => (
         <div
           key={i}
           aria-hidden="true"
-          className="h-40 animate-pulse rounded-xl bg-surface-raised"
+          className="aspect-[3/4] animate-pulse rounded-xl bg-surface-raised"
         />
       ))}
     </div>

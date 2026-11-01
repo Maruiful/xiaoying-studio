@@ -16,9 +16,9 @@ export default async function HomePage({ searchParams }: Props) {
   const categories = await getCategories();
 
   return (
-    <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
+    <main className="mx-auto max-w-[1600px] px-4 py-5">
       <h1 className="sr-only">模板列表</h1>
-      <div className="mb-6">
+      <div className="mb-5">
         <CategoryTabs categories={categories} active={category} />
       </div>
       {/* key 随分类变化，切换分类时重新显示骨架屏 */}

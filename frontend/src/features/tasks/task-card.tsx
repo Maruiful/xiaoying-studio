@@ -21,12 +21,48 @@ export function TaskCard({
   );
 
   return (
+    // 布局参考 resources/模板详情与素材上传.png：竖版卡片，上方预览区，下方标题与进度
     <article
       aria-labelledby={`task-${task.id}-title`}
-      className="flex flex-col gap-3 rounded-xl bg-surface-raised p-4"
+      className="flex flex-col overflow-hidden rounded-xl border border-border bg-background"
     >
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="relative aspect-[3/4]">
+        {task.status === "SUCCEEDED" && task.resultUrl ? (
+          <a
+            href={task.resultUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block h-full"
+            aria-label={`在新窗口查看「${task.templateTitle}」的制作结果`}
+          >
+            <img
+              src={task.resultUrl}
+              alt={`「${task.templateTitle}」制作结果`}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </a>
+        ) : (
+          <div className="flex h-full items-center justify-center p-4 text-center text-sm">
+            {task.status === "FAILED" ? (
+              <p className="text-danger">
+                {task.stage ? `${STAGE_LABELS[task.stage]}失败：` : ""}
+                {task.failReason ?? "未知原因"}
+              </p>
+            ) : (
+              <p className="text-foreground">
+                {task.stage ? `${STAGE_LABELS[task.stage]}中…` : "等待处理…"}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="absolute top-2 right-2">
+          <StatusBadge task={task} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 p-3">
+        <header className="min-w-0">
           <h3 id={`task-${task.id}-title`} className="truncate font-medium">
             {task.templateTitle}
           </h3>
@@ -36,55 +72,30 @@ export function TaskCard({
               {formatTaskTime(task.createdAt)}
             </time>
           </p>
-        </div>
-        <StatusBadge task={task} />
-      </header>
+        </header>
 
-      <StageList task={task} />
+        <StageList task={task} />
 
-      {task.status === "SUCCEEDED" && task.resultUrl && (
-        <a
-          href={task.resultUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="block overflow-hidden rounded-lg border border-border"
-          aria-label={`在新窗口查看「${task.templateTitle}」的制作结果`}
-        >
-          <img
-            src={task.resultUrl}
-            alt={`「${task.templateTitle}」制作结果`}
-            className="aspect-[3/4] w-full object-cover"
-            loading="lazy"
-          />
-        </a>
-      )}
-
-      {task.status === "FAILED" && (
-        <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
-          {task.stage ? `${STAGE_LABELS[task.stage]}失败：` : ""}
-          {task.failReason ?? "未知原因"}
-        </p>
-      )}
-
-      {queryError && (
-        <div
-          role="status"
-          className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-xs"
-        >
-          <span className="text-muted">
-            状态查询失败{paused ? "，已暂停自动刷新" : "，正在重试"}：
-            {queryError.message}
-          </span>
-          <button
-            type="button"
-            onClick={retry}
-            disabled={fetching}
-            className="shrink-0 rounded px-2 py-1 text-accent hover:bg-surface disabled:opacity-50"
+        {queryError && (
+          <div
+            role="status"
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-xs"
           >
-            {fetching ? "查询中…" : "重试"}
-          </button>
-        </div>
-      )}
+            <span className="text-muted">
+              状态查询失败{paused ? "，已暂停自动刷新" : "，正在重试"}：
+              {queryError.message}
+            </span>
+            <button
+              type="button"
+              onClick={retry}
+              disabled={fetching}
+              className="shrink-0 rounded px-2 py-1 text-accent hover:bg-surface disabled:opacity-50"
+            >
+              {fetching ? "查询中…" : "重试"}
+            </button>
+          </div>
+        )}
+      </div>
     </article>
   );
 }

@@ -14,7 +14,7 @@ export async function TemplateGrid({ category }: { category?: string }) {
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {templates.map((t) => (
         <li key={t.id}>
           <TemplateCard template={t} />
@@ -29,12 +29,12 @@ export function TemplateGridSkeleton() {
     <ul
       aria-busy="true"
       aria-label="模板加载中"
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+      className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
     >
       {Array.from({ length: 6 }, (_, i) => (
         <li
           key={i}
-          className="aspect-[3/4] animate-pulse rounded-xl bg-surface"
+          className="aspect-[9/16] animate-pulse rounded-lg bg-surface"
         />
       ))}
     </ul>

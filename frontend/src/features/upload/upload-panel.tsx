@@ -57,7 +57,10 @@ function UploadForm({
   };
 
   return (
-    <section aria-labelledby="upload-heading" className="flex flex-col gap-3">
+    <section
+      aria-labelledby="upload-heading"
+      className="flex flex-1 flex-col gap-3"
+    >
       <div className="flex items-baseline justify-between">
         <h2 id="upload-heading" className="text-sm font-medium">
           上传素材
@@ -81,6 +84,7 @@ function UploadForm({
               slot={slot}
               accept={accept}
               disabled={submitting}
+              wide={slots.length === 1}
               onSelect={(file) => select(i, file)}
               onRemove={() => remove(i)}
             />
@@ -88,35 +92,38 @@ function UploadForm({
         ))}
       </ul>
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={assetIds === null || submitting}
-        aria-busy={submitting}
-        className="mt-2 rounded-xl bg-accent py-3 font-medium text-accent-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {submitting ? "提交中…" : "开始制作"}
-      </button>
+      {/* 内容不足一屏时 mt-auto 把按钮推到底部；左栏滚动时 sticky 让按钮保持可见 */}
+      <div className="sticky bottom-0 mt-auto flex flex-col gap-2 bg-surface pt-3 pb-5">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={assetIds === null || submitting}
+          aria-busy={submitting}
+          className="rounded-xl bg-accent py-3 font-medium text-accent-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {submitting ? "提交中…" : "开始制作"}
+        </button>
 
-      <p aria-live="polite" className="text-center text-xs">
-        {createTask.isError ? (
-          <span className="text-danger">
-            提交失败：{createTask.error.message}
-          </span>
-        ) : createTask.isSuccess && readyCount === 0 ? (
-          <span className="text-accent">
-            任务 #{createTask.data.taskId} 已提交，可在制作记录中查看进度
-          </span>
-        ) : (
-          <span className="text-muted">
-            {uploading
-              ? "图片上传中，请稍候"
-              : assetIds === null
-                ? `还需上传 ${slots.length - readyCount} 张图片`
-                : "素材已就绪"}
-          </span>
-        )}
-      </p>
+        <p aria-live="polite" className="text-center text-xs">
+          {createTask.isError ? (
+            <span className="text-danger">
+              提交失败：{createTask.error.message}
+            </span>
+          ) : createTask.isSuccess && readyCount === 0 ? (
+            <span className="text-accent">
+              任务 #{createTask.data.taskId} 已提交，可在制作记录中查看进度
+            </span>
+          ) : (
+            <span className="text-muted">
+              {uploading
+                ? "图片上传中，请稍候"
+                : assetIds === null
+                  ? `还需上传 ${slots.length - readyCount} 张图片`
+                  : "素材已就绪"}
+            </span>
+          )}
+        </p>
+      </div>
     </section>
   );
 }

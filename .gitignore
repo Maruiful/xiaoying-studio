@@ -19,3 +19,7 @@ Thumbs.db
 
 # JVM 崩溃日志
 hs_err_pid*.log
+
+# Playwright MCP 截图与快照
+.playwright-mcp/
+shots/

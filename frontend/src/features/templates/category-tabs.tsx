@@ -23,8 +23,8 @@ export function CategoryTabs({ categories, active }: Props) {
                 scroll={false}
                 className={
                   selected
-                    ? "block rounded-lg bg-surface-raised px-4 py-2 text-sm font-medium text-foreground"
-                    : "block rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
+                    ? "block rounded-lg bg-surface-raised px-4 py-1.5 text-sm font-medium text-foreground"
+                    : "block rounded-lg px-4 py-1.5 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
                 }
               >
                 {tab.name}
